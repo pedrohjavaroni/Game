@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>O Sistema</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="bg-grid"></div>
+
+  <header class="topbar">
+    <div class="brand">[ SISTEMA ]</div>
+    <div class="clock" id="reset-clock" title="Tempo até o reset diário">--:--:--</div>
+  </header>
+
+  <main id="app">
+    <!-- STATUS -->
+    <section class="view active" id="view-status">
+      <div class="panel" id="penalty-panel" hidden>
+        <div class="panel-title danger">⚠ MISSÃO DE PENALIDADE</div>
+        <p class="sys-text">Você falhou em concluir a Missão Diária. Enquanto a penalidade estiver ativa, todo XP ganho é <b>reduzido pela metade</b>.</p>
+        <div class="quest penalty">
+          <div class="q-info"><div class="q-name" id="penalty-text">Sobreviva</div></div>
+          <button class="btn danger" id="penalty-done">CONCLUÍDA</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">STATUS</div>
+        <div class="status-head">
+          <div class="rank-badge" id="rank-badge">E</div>
+          <div class="status-id">
+            <div class="row"><span class="lbl">NOME</span><span id="st-name">-</span></div>
+            <div class="row"><span class="lbl">NÍVEL</span><span id="st-level" class="big">1</span></div>
+            <div class="row"><span class="lbl">TÍTULO</span><span id="st-title">Nenhum</span></div>
+            <div class="row"><span class="lbl">CLASSE</span><span id="st-class">Jogador</span></div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label"><span>XP</span><span id="st-xp">0 / 100</span></div>
+          <div class="bar"><div class="bar-fill xp" id="st-xp-bar"></div></div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label"><span>PROGRESSO DO CORPO</span><span id="st-body">0%</span></div>
+          <div class="bar"><div class="bar-fill hp" id="st-body-bar"></div></div>
+        </div>
+        <div class="mini-stats">
+          <div><span class="lbl">PESO</span><b id="st-weight">-</b></div>
+          <div><span class="lbl">META</span><b id="st-goal">-</b></div>
+          <div><span class="lbl">IMC</span><b id="st-bmi">-</b></div>
+          <div><span class="lbl">SEQUÊNCIA</span><b id="st-streak">0</b></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">ATRIBUTOS <span class="points" id="st-points"></span></div>
+        <div id="stats-list" class="stats-list"></div>
+      </div>
+
+    </section>
+
+    <!-- MISSÕES -->
+    <section class="view" id="view-quests">
+      <div class="panel">
+        <div class="panel-title">MISSÃO DIÁRIA</div>
+        <p class="sys-text center">[ Preparar para se tornar mais forte ]</p>
+        <div id="quest-list"></div>
+        <div class="daily-reward" id="daily-reward"></div>
+        <p class="warn-text">AVISO: Não concluir a missão diária resultará em uma <span class="danger-text">penalidade</span>.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">MASMORRA SEMANAL</div>
+        <div id="dungeon"></div>
+      </div>
+    </section>
+
+    <!-- PESO -->
+    <section class="view" id="view-weight">
+      <div class="panel">
+        <div class="panel-title">REGISTRO DE PESO</div>
+        <form id="weight-form" class="inline-form">
+          <input type="number" step="0.1" min="30" max="400" id="weight-input" placeholder="Peso de hoje (kg)" required>
+          <button class="btn" type="submit">REGISTRAR</button>
+        </form>
+        <p class="sys-text small">+10 XP por pesagem diária · +100 XP por cada kg abaixo do seu menor peso</p>
+        <canvas id="weight-chart" height="220"></canvas>
+        <div class="mini-stats" id="weight-summary"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">HISTÓRICO</div>
+        <ul id="weight-history" class="history"></ul>
+      </div>
+    </section>
+
+    <!-- CONQUISTAS -->
+    <section class="view" id="view-achievements">
+      <div class="panel">
+        <div class="panel-title">CONQUISTAS &amp; TÍTULOS</div>
+        <p class="sys-text small">Toque em uma conquista desbloqueada para equipar o título.</p>
+        <div id="achievements" class="ach-grid"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">REGISTROS</div>
+        <div class="mini-stats" id="records"></div>
+      </div>
+    </section>
+
+    <!-- CONFIG -->
+    <section class="view" id="view-settings">
+      <div class="panel">
+        <div class="panel-title">PERFIL DO JOGADOR</div>
+        <form id="settings-form" class="form">
+          <label>Nome <input id="cfg-name" required maxlength="24"></label>
+          <label>Altura (cm) <input id="cfg-height" type="number" min="100" max="250" required></label>
+          <label>Peso meta (kg) <input id="cfg-goal" type="number" step="0.1" min="30" max="400" required></label>
+          <label>Dificuldade
+            <select id="cfg-diff">
+              <option value="iniciante">Iniciante (metade das repetições)</option>
+              <option value="normal">Normal</option>
+              <option value="dificil">Difícil (+50%)</option>
+            </select>
+          </label>
+          <button class="btn" type="submit">SALVAR</button>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-title">DADOS</div>
+        <p class="sys-text small">Seus dados ficam salvos apenas neste aparelho. Faça backup de vez em quando.</p>
+        <div class="btn-row">
+          <button class="btn" id="export-btn">EXPORTAR BACKUP</button>
+          <label class="btn file-btn">IMPORTAR<input type="file" id="import-file" accept="application/json" hidden></label>
+        </div>
+        <button class="btn danger full" id="reset-btn">APAGAR TUDO E RECOMEÇAR</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">AVISO DO SISTEMA</div>
+        <p class="sys-text small">Este jogo é motivacional e não substitui orientação médica ou nutricional. Antes de começar um programa de exercícios, principalmente se tiver alguma condição de saúde, consulte um profissional. Uma perda saudável costuma ficar entre 0,5 e 1 kg por semana. Sentiu dor, tontura ou falta de ar? Pare. Descanso também faz parte de ficar mais forte.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-view="status" class="active"><span>◆</span>Status</button>
+    <button data-view="quests"><span>!</span>Missões</button>
+    <button data-view="weight"><span>⚖</span>Peso</button>
+    <button data-view="achievements"><span>★</span>Títulos</button>
+    <button data-view="settings"><span>⚙</span>Config</button>
+  </nav>
+
+  <!-- Onboarding -->
+  <div class="modal" id="onboarding" hidden>
+    <div class="panel modal-box">
+      <div class="panel-title">NOTIFICAÇÃO</div>
+      <div id="ob-step1">
+        <p class="sys-text center big-sys">Você adquiriu as qualificações para ser um <b>Jogador</b>.</p>
+        <p class="sys-text center">Deseja aceitar?</p>
+        <div class="btn-row center">
+          <button class="btn" id="ob-accept">ACEITAR</button>
+        </div>
+      </div>
+      <form id="ob-form" class="form" hidden>
+        <p class="sys-text">O Sistema precisa registrar seus dados iniciais.</p>
+        <label>Nome do Jogador <input id="ob-name" required maxlength="24"></label>
+        <label>Altura (cm) <input id="ob-height" type="number" min="100" max="250" required></label>
+        <label>Peso atual (kg) <input id="ob-weight" type="number" step="0.1" min="30" max="400" required></label>
+        <label>Peso meta (kg) <input id="ob-goal" type="number" step="0.1" min="30" max="400" required></label>
+        <label>Dificuldade
+          <select id="ob-diff">
+            <option value="iniciante">Iniciante (recomendado para começar)</option>
+            <option value="normal">Normal</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">DESPERTAR</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- System notifications -->
+  <div id="toasts"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
