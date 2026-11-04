@@ -991,6 +991,7 @@ function renderPlan() {
 
 buildHealthFields();
 initGymEvents();
+initReport();
 $('#open-achievements').onclick = () => showView('achievements');
 
 if (!state.profile) {

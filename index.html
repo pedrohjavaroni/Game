@@ -66,7 +66,10 @@
         <div class="panel-title">ATRIBUTOS <span class="points" id="st-points"></span></div>
         <div id="stats-list" class="stats-list"></div>
       </div>
-      <button class="btn full" id="open-achievements">★ CONQUISTAS &amp; TÍTULOS</button>
+      <div class="btn-row two">
+        <button class="btn" id="open-achievements">★ CONQUISTAS</button>
+        <button class="btn gold open-report">📄 RELATÓRIO</button>
+      </div>
 
     </section>
 
@@ -184,6 +187,7 @@
         <p class="sys-text small">+10 XP por pesagem diária · +100 XP por cada kg abaixo do seu menor peso</p>
         <canvas id="weight-chart" height="220"></canvas>
         <div class="mini-stats" id="weight-summary"></div>
+        <button class="btn full gold open-report">📄 RELATÓRIO DE EVOLUÇÃO</button>
       </div>
       <div class="panel">
         <div class="panel-title">HISTÓRICO</div>
@@ -230,6 +234,7 @@
           <button class="btn" id="export-btn">EXPORTAR BACKUP</button>
           <label class="btn file-btn">IMPORTAR<input type="file" id="import-file" accept="application/json" hidden></label>
         </div>
+        <button class="btn full gold open-report">📄 RELATÓRIO DE EVOLUÇÃO (PDF / PLANILHA)</button>
         <button class="btn danger full" id="reset-btn">APAGAR TUDO E RECOMEÇAR</button>
       </div>
       <div class="panel">
@@ -278,11 +283,34 @@
     </div>
   </div>
 
+  <!-- Relatório -->
+  <div id="report-view" hidden>
+    <div class="report-bar">
+      <div class="report-row">
+        <b>RELATÓRIO DE EVOLUÇÃO</b>
+        <button class="btn mini" id="report-close" aria-label="Fechar">✕</button>
+      </div>
+      <div class="report-row seg" id="report-period">
+        <button class="btn mini" data-p="30">30 dias</button>
+        <button class="btn mini" data-p="90">90 dias</button>
+        <button class="btn mini" data-p="all">Tudo</button>
+      </div>
+      <div class="report-row actions">
+        <button class="btn mini gold" id="report-print">SALVAR PDF</button>
+        <button class="btn mini" id="report-html">BAIXAR ARQUIVO</button>
+        <button class="btn mini" id="report-csv">PLANILHA</button>
+        <button class="btn mini" id="report-share">COMPARTILHAR</button>
+      </div>
+    </div>
+    <div id="report-body"></div>
+  </div>
+
   <!-- System notifications -->
   <div id="toasts"></div>
 
   <script src="health.js"></script>
   <script src="gym.js"></script>
+  <script src="report.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

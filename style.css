@@ -284,3 +284,28 @@ canvas { width: 100%; display: block; margin-top: 10px; }
 
 #rest-timer { position: fixed; left: 16px; right: 16px; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 20; max-width: 528px; margin: 0 auto; text-align: center; padding: 12px; font-family: 'Orbitron', sans-serif; font-size: 15px; letter-spacing: 1px; background: rgba(8,18,40,.97); border: 1px solid var(--gold); color: var(--gold); box-shadow: 0 0 18px rgba(255,209,102,.45); cursor: pointer; }
 #open-achievements { margin-bottom: 18px; }
+
+/* ---------- Relatório ---------- */
+.btn-row.two { margin-bottom: 18px; }
+.btn-row.two .btn { flex: 1; }
+#report-view { position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: #eef3fb; -webkit-overflow-scrolling: touch; }
+body.report-open { overflow: hidden; }
+.report-bar { position: sticky; top: 0; z-index: 2; background: rgba(5,9,20,.97); border-bottom: 1px solid var(--glow); padding: 10px 16px calc(10px); padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 8px; }
+.report-row { display: flex; gap: 6px; align-items: center; justify-content: space-between; max-width: 760px; width: 100%; margin: 0 auto; }
+.report-row b { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 2px; color: var(--glow); }
+.report-row.seg, .report-row.actions { justify-content: flex-start; flex-wrap: wrap; }
+.report-row.actions .btn { flex: 1 1 auto; }
+#report-period .btn.active { border-color: var(--gold); color: var(--gold); background: rgba(255,209,102,.12); }
+#report-body { padding: 16px 0 40px; }
+#report-body .rep { box-shadow: 0 4px 24px rgba(11,61,145,.15); border-radius: 8px; }
+
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff !important; padding: 0 !important; min-height: 0; }
+  body > *:not(#report-view) { display: none !important; }
+  #report-view { position: static; overflow: visible; background: #fff; }
+  .report-bar { display: none !important; }
+  #report-body { padding: 0; }
+  #report-body .rep { box-shadow: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

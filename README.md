@@ -33,6 +33,18 @@ Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, r
 - Nos dias de academia, a Missão Diária troca flexões/abdominais/agachamentos por
   "Treino na academia".
 
+## Relatório de evolução
+
+Em **Status**, **Peso** ou **Config** → *Relatório*. Escolha o período (30 dias, 90 dias ou tudo) e:
+- **Salvar PDF**: abre a impressão do celular/computador → "Salvar como PDF".
+- **Baixar arquivo**: relatório em HTML para guardar e abrir/imprimir depois.
+- **Planilha**: CSV dia a dia (peso, missão diária, presença, treino, séries, duração) que abre no Excel/Google Sheets.
+- **Compartilhar**: resumo em texto para mandar para alguém.
+
+Conteúdo: peso inicial/atual, variação, IMC, ritmo semanal, % da meta, cintura, gráfico de peso, média
+semanal, missões e sequências, presença na academia, evolução de cargas por exercício, treinos
+realizados, conquistas do período e plano atual.
+
 ## Plano personalizado (aba ✚ Plano)
 
 No cadastro o Sistema pede altura, peso, meta, sexo, idade, nível de atividade, ritmo desejado,
