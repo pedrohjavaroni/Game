@@ -19,6 +19,20 @@ Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, r
   Cada nível dá 3 pontos para distribuir em FOR, AGI, VIT, PER e INT.
 - **Conquistas e títulos**: 16 conquistas; toque numa desbloqueada para equipar o título.
 
+## Academia (aba ⚔ Treino)
+
+- Escolha os **dias da semana** e sua **experiência**. O app gera a divisão automaticamente:
+  2× corpo inteiro A/B · 3× corpo inteiro A/B/C (iniciante) ou Empurrar/Puxar/Pernas ·
+  4× Superiores/Inferiores · 5× Sup/Inf + Empurrar/Puxar/Pernas · 6× Empurrar/Puxar/Pernas ×2.
+- Séries, repetições e descanso por nível (iniciante 3×12 · intermediário 3×10 · avançado 4×8–10),
+  com cardio final (baixo impacto se o perfil de saúde pedir).
+- **Check-in** de presença (+20 XP), registro de **carga** e **séries** com cronômetro de descanso,
+  sugestão de progressão de carga, **finalizar treino** (+60 XP) e **recordes pessoais** (+25 XP).
+- **Metas**: presença na semana e no mês, **Semana Perfeita** (+150 XP), sequência de semanas,
+  histórico e 8 conquistas novas.
+- Nos dias de academia, a Missão Diária troca flexões/abdominais/agachamentos por
+  "Treino na academia".
+
 ## Plano personalizado (aba ✚ Plano)
 
 No cadastro o Sistema pede altura, peso, meta, sexo, idade, nível de atividade, ritmo desejado,

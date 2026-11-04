@@ -249,3 +249,38 @@ canvas { width: 100%; display: block; margin-top: 10px; }
 .sources li { margin-bottom: 4px; }
 .tabbar button { font-size: 11px; letter-spacing: .5px; }
 .macro .m-head > span:last-child { white-space: nowrap; padding-left: 8px; }
+
+/* ---------- Treino ---------- */
+.day-picker { display: flex; gap: 4px; }
+.day-pick { flex: 1; position: relative; }
+.form label.day-pick { flex-direction: column; align-items: center; }
+.day-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.day-pick span { display: block; width: 100%; text-align: center; padding: 10px 0; border: 1px solid rgba(76,195,255,.3); color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 3px; }
+.day-pick input:checked + span { border-color: var(--gold); color: var(--gold); background: rgba(255,209,102,.1); box-shadow: 0 0 8px rgba(255,209,102,.3); }
+.gym-week .dday { display: flex; flex-direction: column; gap: 2px; }
+.gym-week .dday b { font-family: 'Orbitron', sans-serif; font-size: 14px; color: #fff; }
+.gym-week .dday.ok b { color: var(--ok); }
+.gym-week .dday.rest { opacity: .5; }
+
+.exercise { border-bottom: 1px solid rgba(76,195,255,.15); padding: 10px 0; }
+.ex-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ex-ctrl { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.kg-input { width: 78px; flex: 0 0 78px; text-align: center; padding: 7px 6px; }
+.set-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.set-chip { width: 40px; height: 36px; border: 1px solid rgba(76,195,255,.5); background: rgba(47,168,255,.08); color: #fff; font-family: 'Orbitron', sans-serif; border-radius: 3px; cursor: pointer; }
+.set-chip.on { border-color: var(--ok); color: var(--ok); background: rgba(62,240,168,.12); box-shadow: 0 0 8px rgba(62,240,168,.35); }
+.set-chip:disabled { cursor: default; }
+.ex-hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.cardio-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cardio-row .ex-head { flex-direction: column; align-items: flex-start; }
+#gym-today > .btn.full { margin-top: 14px; }
+
+.workout { border: 1px solid rgba(76,195,255,.25); margin-bottom: 8px; padding: 8px 10px; }
+.workout summary { cursor: pointer; display: flex; justify-content: space-between; gap: 8px; list-style: none; }
+.workout summary::-webkit-details-marker { display: none; }
+.workout summary small { color: var(--gold); white-space: nowrap; }
+.ex-list { margin: 8px 0 2px; padding-left: 18px; font-size: 15px; line-height: 1.5; }
+.ex-list .cardio { color: var(--ok); }
+
+#rest-timer { position: fixed; left: 16px; right: 16px; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 20; max-width: 528px; margin: 0 auto; text-align: center; padding: 12px; font-family: 'Orbitron', sans-serif; font-size: 15px; letter-spacing: 1px; background: rgba(8,18,40,.97); border: 1px solid var(--gold); color: var(--gold); box-shadow: 0 0 18px rgba(255,209,102,.45); cursor: pointer; }
+#open-achievements { margin-bottom: 18px; }

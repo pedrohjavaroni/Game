@@ -66,6 +66,7 @@
         <div class="panel-title">ATRIBUTOS <span class="points" id="st-points"></span></div>
         <div id="stats-list" class="stats-list"></div>
       </div>
+      <button class="btn full" id="open-achievements">★ CONQUISTAS &amp; TÍTULOS</button>
 
     </section>
 
@@ -83,6 +84,52 @@
         <div class="panel-title">MASMORRA SEMANAL</div>
         <div id="dungeon"></div>
       </div>
+    </section>
+
+    <!-- TREINO -->
+    <section class="view" id="view-gym">
+      <div class="panel" id="gym-setup" data-editing="0">
+        <div class="panel-title">PLANO DE ACADEMIA</div>
+        <p class="sys-text">Escolha os dias em que você vai à academia. O Fit Game monta a divisão de treino da semana e as metas de presença.</p>
+        <form id="gym-setup-form" class="form">
+          <div class="day-picker" id="gym-days"></div>
+          <label>Experiência na musculação <select id="gym-level"></select></label>
+          <p class="sys-text small">Nos dias de academia, o treino entra na Missão Diária no lugar de flexões, abdominais e agachamentos. Para quem está emagrecendo, 3 a 4 dias por semana é um ótimo começo.</p>
+          <button class="btn" type="submit">GERAR PLANO DE TREINO</button>
+          <button class="btn danger" type="button" id="gym-cancel">CANCELAR</button>
+        </form>
+      </div>
+
+      <div id="gym-main" hidden>
+        <div class="panel">
+          <div class="panel-title">SEMANA DE TREINO</div>
+          <div class="dungeon-days gym-week" id="gym-week"></div>
+          <p class="sys-text center" id="gym-week-goal"></p>
+          <button class="btn full gold" id="gym-perfect"></button>
+        </div>
+        <div class="panel">
+          <div class="panel-title">TREINO DE HOJE</div>
+          <div id="gym-today"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">METAS DE PRESENÇA</div>
+          <div id="gym-goals"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">DIVISÃO DA SEMANA</div>
+          <div id="gym-plan"></div>
+          <button class="btn full" id="gym-edit">EDITAR DIAS / NÍVEL</button>
+        </div>
+        <div class="panel">
+          <div class="panel-title">RECORDES PESSOAIS</div>
+          <ul class="history" id="gym-prs"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-title">HISTÓRICO DE TREINOS</div>
+          <ul class="history" id="gym-history"></ul>
+        </div>
+      </div>
+      <div id="rest-timer" hidden></div>
     </section>
 
     <!-- PLANO -->
@@ -195,9 +242,9 @@
   <nav class="tabbar">
     <button data-view="status" class="active"><span>◆</span>Status</button>
     <button data-view="quests"><span>!</span>Missões</button>
+    <button data-view="gym"><span>⚔</span>Treino</button>
     <button data-view="plan"><span>✚</span>Plano</button>
     <button data-view="weight"><span>⚖</span>Peso</button>
-    <button data-view="achievements"><span>★</span>Títulos</button>
     <button data-view="settings"><span>⚙</span>Config</button>
   </nav>
 
@@ -235,6 +282,7 @@
   <div id="toasts"></div>
 
   <script src="health.js"></script>
+  <script src="gym.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -8,15 +8,21 @@
 const STORAGE_KEY = 'sistema-save-v1';
 
 const QUESTS = [
-  { id: 'pushups', name: 'Flexões', sub: 'Vale com joelho apoiado', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
-  { id: 'situps', name: 'Abdominais', sub: 'Qualquer variação', stat: 'VIT', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
-  { id: 'squats', name: 'Agachamentos', sub: 'Desça até onde for confortável', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
+  { id: 'pushups', bw: true, name: 'Flexões', sub: 'Vale com joelho apoiado', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
+  { id: 'situps', bw: true, name: 'Abdominais', sub: 'Qualquer variação', stat: 'VIT', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
+  { id: 'squats', bw: true, name: 'Agachamentos', sub: 'Desça até onde for confortável', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
+  { id: 'gym', gymOnly: true, name: 'Treino na academia', sub: () => 'Finalize o treino do dia na aba Treino', stat: 'FOR', check: true },
   { id: 'walk', name: 'Caminhada / Corrida', sub: 'Distância total do dia', stat: 'AGI', unit: ' km', base: 1, step: 0.25, max: 10, incs: [0.5, 1], scale: true, decimal: true },
   { id: 'water', name: 'Hidratação', sub: (p) => `${fmtL(p.waterMl)} por dia · copos de 250 ml`, stat: 'VIT', base: 8, dyn: (p) => p.waterCups, incs: [1] },
   { id: 'calories', name: 'Meta calórica', sub: (p) => `Comer perto de ${fmtInt(p.kcal)} kcal (±10%)`, stat: 'INT', check: true },
   { id: 'protein', name: 'Proteína', sub: (p) => `Atingir ~${p.protein} g de proteína no dia`, stat: 'VIT', check: true },
   { id: 'sleep', name: 'Recuperação', sub: (p) => `Dormir ${p.sleep}`, stat: 'PER', check: true },
 ];
+
+// nos dias de academia o treino substitui flexões, abdominais e agachamentos
+function activeQuests(d) {
+  return QUESTS.filter((q) => (d && d.gymDay ? !q.bw : !q.gymOnly));
+}
 
 const STATS = [
   { id: 'FOR', name: 'FORÇA' },
@@ -60,6 +66,14 @@ const ACHIEVEMENTS = [
   { id: 'dungeon1', title: 'Explorador de Masmorras', desc: 'Conquiste uma Masmorra Semanal' },
   { id: 'dungeon4', title: 'Conquistador', desc: 'Conquiste 4 Masmorras Semanais' },
   { id: 'weigh10', title: 'Analista', desc: 'Registre o peso 10 vezes' },
+  { id: 'gym1', title: 'Primeiro Passo no Ferro', desc: 'Faça seu primeiro check-in na academia' },
+  { id: 'gym10', title: 'Frequentador', desc: '10 treinos na academia' },
+  { id: 'gym50', title: 'Guerreiro de Ferro', desc: '50 treinos na academia' },
+  { id: 'gym100', title: 'Titã da Academia', desc: '100 treinos na academia' },
+  { id: 'gymweek', title: 'Semana Perfeita', desc: 'Bata a meta de presença da semana' },
+  { id: 'gymweek4', title: 'Constância de Aço', desc: '4 semanas perfeitas na academia' },
+  { id: 'pr1', title: 'Quebra-Recordes', desc: 'Supere uma carga pela primeira vez' },
+  { id: 'pr10', title: 'Força Crescente', desc: '10 recordes pessoais' },
 ];
 
 /* ---------------- utilidades ---------------- */
@@ -113,6 +127,7 @@ function defaultState() {
     achievements: {},
     title: null,
     lastDay: null,
+    gym: { setup: null, sessions: {}, prs: {}, perfectWeeks: {}, totalCheckins: 0, finished: 0, prCount: 0 },
   };
 }
 
@@ -169,13 +184,14 @@ function makeDay() {
   const plan = getPlan();
   const targets = {};
   QUESTS.forEach((q) => { targets[q.id] = questTarget(q, state.level, diff, plan); });
-  return { targets, progress: {}, rewarded: {}, completed: false };
+  return { targets, progress: {}, rewarded: {}, completed: false, gymDay: isGymDay(dateKey()) };
 }
 
 function today() {
   const k = dateKey();
   if (!state.days[k]) state.days[k] = makeDay();
   const d = state.days[k];
+  if (d.gymDay === undefined) d.gymDay = false;
   // migração: missões novas que não existiam quando o dia foi criado
   if (QUESTS.some((q) => d.targets[q.id] == null)) {
     const plan = getPlan();
@@ -243,7 +259,7 @@ function updateQuest(id, delta) {
     gainXp(XP_PER_QUEST, `Missão "${q.name}" concluída.`);
   }
 
-  const allDone = QUESTS.every((x) => (d.progress[x.id] || 0) >= d.targets[x.id]);
+  const allDone = activeQuests(d).every((x) => (d.progress[x.id] || 0) >= d.targets[x.id]);
   if (allDone && !d.completed) {
     d.completed = true;
     state.streak += 1;
@@ -346,6 +362,7 @@ function checkAchievements() {
     dungeon1: dungeons >= 1,
     dungeon4: dungeons >= 4,
     weigh10: state.weights.length >= 10,
+    ...gymAchievementConds(),
   };
   ACHIEVEMENTS.forEach((a) => {
     if (cond[a.id] && !state.achievements[a.id]) {
@@ -380,6 +397,7 @@ function render() {
   renderDungeon();
   renderWeight();
   renderPlan();
+  renderGym();
   renderAchievements();
 }
 
@@ -437,7 +455,7 @@ function renderQuests() {
   const plan = getPlan();
   const list = $('#quest-list');
   list.innerHTML = '';
-  QUESTS.forEach((q) => {
+  activeQuests(d).forEach((q) => {
     const target = d.targets[q.id];
     const v = d.progress[q.id] || 0;
     const done = v >= target;
@@ -456,7 +474,12 @@ function renderQuests() {
       info.append(bar);
     }
     const btns = el('div', 'q-btns');
-    if (q.check) {
+    if (q.id === 'gym') {
+      const b = el('button', `btn mini${done ? ' gold' : ''}`, done ? 'FEITO' : 'IR TREINAR');
+      b.disabled = done;
+      b.onclick = () => showView('gym');
+      btns.append(b);
+    } else if (q.check) {
       const b = el('button', `btn mini${done ? ' gold' : ''}`, done ? 'FEITO' : 'CONCLUIR');
       b.onclick = () => updateQuest(q.id, done ? -1 : 1);
       btns.append(b);
@@ -482,9 +505,10 @@ function renderQuests() {
     r.className = 'daily-reward claimed';
     r.textContent = '✔ Missão Diária completa. Recompensa recebida. Descanse, Jogador.';
   } else {
-    const n = QUESTS.filter((q) => (d.progress[q.id] || 0) >= d.targets[q.id]).length;
+    const aq = activeQuests(d);
+    const n = aq.filter((q) => (d.progress[q.id] || 0) >= d.targets[q.id]).length;
     r.className = 'daily-reward';
-    r.textContent = `Recompensa ao completar tudo: +${bonus} XP (bônus de sequência) · ${n}/${QUESTS.length} concluídas`;
+    r.textContent = `Recompensa ao completar tudo: +${bonus} XP (bônus de sequência) · ${n}/${QUESTS.length} concluídas`.replace(`/${QUESTS.length}`, `/${aq.length}`);
   }
 }
 
@@ -645,6 +669,7 @@ function showView(name) {
   window.scrollTo(0, 0);
   if (name === 'weight') drawChart();
   if (name === 'plan') renderPlan();
+  if (name === 'gym') renderGym();
   if (name === 'settings') fillSettings();
 }
 
@@ -965,6 +990,8 @@ function renderPlan() {
 /* ---------------- início ---------------- */
 
 buildHealthFields();
+initGymEvents();
+$('#open-achievements').onclick = () => showView('achievements');
 
 if (!state.profile) {
   $('#onboarding').hidden = false;
