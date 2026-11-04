@@ -1,5 +1,5 @@
-const CACHE = 'sistema-v2';
-const ASSETS = ['./', './index.html', './style.css', './health.js', './app.js', './manifest.json', './icon.svg'];
+const CACHE = 'sistema-v3';
+const ASSETS = ['./', './index.html', './style.css', './health.js', './app.js', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

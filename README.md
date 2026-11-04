@@ -40,16 +40,28 @@ condições de saúde e IMC ≥ 35 geram alertas recomendando acompanhamento mé
 O plano é recalculado a cada novo peso, e as missões de **água, meta calórica, proteína e sono**
 usam esses números. Quem já tinha um save recebe um pedido para completar a ficha de saúde.
 
-## Como abrir
+## Como abrir no celular
 
-É só HTML/CSS/JS, sem instalação. Opções:
+1. **Hospede o app** (escolha uma):
+   - **GitHub Pages**: o repositório é privado, e Pages em repositório privado exige GitHub Pro.
+     Se deixar o repositório público (nenhum dado pessoal fica no código, o progresso fica só no
+     celular): *Settings → Pages → Deploy from a branch* → escolha a branch e `/ (root)`.
+   - **Netlify / Vercel / Cloudflare Pages** (grátis, aceitam repositório privado): conecte o
+     repositório, sem comando de build, pasta de publicação `/`.
+2. **Instale como app** (abra o link e faça isso *antes* de se cadastrar):
+   - **iPhone (Safari)**: botão Compartilhar → *Adicionar à Tela de Início*.
+   - **Android (Chrome)**: menu ⋮ → *Instalar app* / *Adicionar à tela inicial*.
+3. Abra sempre pelo ícone. Funciona offline.
 
-1. **GitHub Pages (recomendado p/ celular)**: no GitHub, *Settings → Pages → Deploy from a branch*,
-   escolha a branch e a pasta `/ (root)`. Abra o link no celular e use
-   *"Adicionar à tela inicial"* — vira um app que funciona offline.
-2. **Local**: `python3 -m http.server` nesta pasta e abra `http://localhost:8000`.
+Para testar no computador: `python3 -m http.server` nesta pasta e abra `http://localhost:8000`.
 
-Os dados ficam salvos só no aparelho (localStorage). Use **Config → Exportar backup** de vez em quando.
+### Onde fica salvo o progresso
+
+- No próprio aparelho (localStorage). Nada é enviado para servidor.
+- **iPhone**: o app da tela de início tem armazenamento separado do Safari, por isso cadastre-se
+  já abrindo pelo ícone.
+- O progresso se perde se você limpar os dados do navegador/site, desinstalar o app ou trocar de
+  celular. Use **Config → Exportar backup** (o app lembra a cada 7 dias) e **Importar** para restaurar.
 
 ## Aviso
 

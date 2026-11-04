@@ -729,6 +729,8 @@ $('#export-btn').onclick = () => {
   a.href = URL.createObjectURL(blob);
   a.download = `sistema-backup-${dateKey()}.json`;
   a.click();
+  state.lastBackup = dateKey();
+  save();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 
@@ -973,9 +975,18 @@ if (!state.profile) {
 } else {
   rollover();
   render();
+  const since = state.lastBackup || state.profile.startDate;
+  if ((parseKey(dateKey()) - parseKey(since)) / 86400000 >= 7) {
+    setTimeout(() => toast('SISTEMA', 'Faz 7 dias ou mais sem backup. Vá em <b>Config → Exportar backup</b> para proteger seu progresso.'), 1500);
+  }
 }
 tick();
 setInterval(tick, 1000);
+
+// pede ao navegador para não apagar os dados automaticamente
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
