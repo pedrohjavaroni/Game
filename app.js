@@ -12,9 +12,10 @@ const QUESTS = [
   { id: 'situps', name: 'Abdominais', sub: 'Qualquer variação', stat: 'VIT', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
   { id: 'squats', name: 'Agachamentos', sub: 'Desça até onde for confortável', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
   { id: 'walk', name: 'Caminhada / Corrida', sub: 'Distância total do dia', stat: 'AGI', unit: ' km', base: 1, step: 0.25, max: 10, incs: [0.5, 1], scale: true, decimal: true },
-  { id: 'water', name: 'Hidratação', sub: 'Copos de 250 ml', stat: 'VIT', base: 8, step: 0, max: 8, incs: [1] },
-  { id: 'diet', name: 'Alimentação limpa', sub: 'Sem doces, refrigerante e fast food', stat: 'INT', check: true },
-  { id: 'sleep', name: 'Recuperação', sub: 'Dormir 7 horas ou mais', stat: 'PER', check: true },
+  { id: 'water', name: 'Hidratação', sub: (p) => `${fmtL(p.waterMl)} por dia · copos de 250 ml`, stat: 'VIT', base: 8, dyn: (p) => p.waterCups, incs: [1] },
+  { id: 'calories', name: 'Meta calórica', sub: (p) => `Comer perto de ${fmtInt(p.kcal)} kcal (±10%)`, stat: 'INT', check: true },
+  { id: 'protein', name: 'Proteína', sub: (p) => `Atingir ~${p.protein} g de proteína no dia`, stat: 'VIT', check: true },
+  { id: 'sleep', name: 'Recuperação', sub: (p) => `Dormir ${p.sleep}`, stat: 'PER', check: true },
 ];
 
 const STATS = [
@@ -77,6 +78,9 @@ const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); r
 const fmtKg = (n) => (n == null ? '-' : `${n.toFixed(1).replace('.', ',')} kg`);
 const fmtNum = (n, dec) => (dec ? String(+n.toFixed(2)).replace('.', ',') : String(n));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtInt = (n) => Math.round(n).toLocaleString('pt-BR');
+const fmtL = (ml) => `${(ml / 1000).toFixed(1).replace('.', ',')} L`;
+const fmtDec = (n, d = 1) => n.toFixed(d).replace('.', ',');
 
 function weekStart(k) {
   const d = parseKey(k);
@@ -146,8 +150,14 @@ function classFor(lvl) {
   return 'Jogador';
 }
 
-function questTarget(q, lvl, diff) {
+function getPlan() {
+  if (!healthProfileComplete(state.profile)) return null;
+  return computePlan(state.profile, currentWeight());
+}
+
+function questTarget(q, lvl, diff, plan) {
   if (q.check) return 1;
+  if (q.dyn) return plan ? q.dyn(plan) : q.base;
   let t = Math.min(q.max, q.base + (lvl - 1) * q.step);
   if (q.scale) t *= DIFF_MULT[diff] || 1;
   if (q.decimal) return Math.max(0.5, Math.round(t * 2) / 2);
@@ -156,15 +166,23 @@ function questTarget(q, lvl, diff) {
 
 function makeDay() {
   const diff = state.profile ? state.profile.difficulty : 'normal';
+  const plan = getPlan();
   const targets = {};
-  QUESTS.forEach((q) => { targets[q.id] = questTarget(q, state.level, diff); });
+  QUESTS.forEach((q) => { targets[q.id] = questTarget(q, state.level, diff, plan); });
   return { targets, progress: {}, rewarded: {}, completed: false };
 }
 
 function today() {
   const k = dateKey();
   if (!state.days[k]) state.days[k] = makeDay();
-  return state.days[k];
+  const d = state.days[k];
+  // migração: missões novas que não existiam quando o dia foi criado
+  if (QUESTS.some((q) => d.targets[q.id] == null)) {
+    const plan = getPlan();
+    const diff = state.profile ? state.profile.difficulty : 'normal';
+    QUESTS.forEach((q) => { if (d.targets[q.id] == null) d.targets[q.id] = questTarget(q, state.level, diff, plan); });
+  }
+  return d;
 }
 
 function gainXp(amount, reason) {
@@ -361,6 +379,7 @@ function render() {
   renderQuests();
   renderDungeon();
   renderWeight();
+  renderPlan();
   renderAchievements();
 }
 
@@ -415,6 +434,7 @@ function renderStatus() {
 
 function renderQuests() {
   const d = today();
+  const plan = getPlan();
   const list = $('#quest-list');
   list.innerHTML = '';
   QUESTS.forEach((q) => {
@@ -425,7 +445,8 @@ function renderQuests() {
     const info = el('div', 'q-info');
     const name = el('div', 'q-name', q.name);
     if (done) name.append(el('span', 'q-check', ' ✔'));
-    info.append(name, el('div', 'q-sub', q.sub));
+    const sub = typeof q.sub === 'function' ? (plan ? q.sub(plan) : '') : q.sub;
+    info.append(name, el('div', 'q-sub', sub));
     if (!q.check) {
       info.append(el('div', 'q-prog', `[${fmtNum(v, q.decimal)}/${fmtNum(target, q.decimal)}${q.unit || ''}]`));
       const bar = el('div', 'qbar');
@@ -603,6 +624,7 @@ function fillSettings() {
   $('#cfg-height').value = p.height;
   $('#cfg-goal').value = p.goalWeight;
   $('#cfg-diff').value = p.difficulty;
+  fillHealthFields('cfg', p);
 }
 
 /* ---------------- relógio de reset ---------------- */
@@ -622,6 +644,7 @@ function showView(name) {
   document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   window.scrollTo(0, 0);
   if (name === 'weight') drawChart();
+  if (name === 'plan') renderPlan();
   if (name === 'settings') fillSettings();
 }
 
@@ -631,18 +654,36 @@ $('#ob-accept').onclick = () => { $('#ob-step1').hidden = true; $('#ob-form').hi
 
 $('#ob-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const start = parseFloat($('#ob-weight').value);
   const goal = parseFloat($('#ob-goal').value);
+  const height = parseFloat($('#ob-height').value);
+  const health = readHealthFields('ob');
+  const minHealthy = 18.5 * (height / 100) ** 2;
+  if (goal < minHealthy && !confirm(`Sua meta está abaixo do peso saudável mínimo para sua altura (~${fmtDec(minHealthy)} kg, IMC 18,5). Deseja continuar mesmo assim?`)) return;
+
+  if (updateMode) {
+    Object.assign(state.profile, { name: $('#ob-name').value.trim(), height, goalWeight: goal, difficulty: $('#ob-diff').value }, health);
+    const d = today();
+    const plan = getPlan();
+    QUESTS.forEach((q) => { d.targets[q.id] = questTarget(q, state.level, state.profile.difficulty, plan); });
+    save();
+    $('#onboarding').hidden = true;
+    render();
+    toast('SISTEMA', 'Dados registrados. Seu plano personalizado foi gerado.');
+    showView('plan');
+    return;
+  }
+
+  const start = parseFloat($('#ob-weight').value);
   if (goal >= start) { alert('O peso meta precisa ser menor que o peso atual.'); return; }
   state = defaultState();
-  state.profile = {
+  state.profile = Object.assign({
     name: $('#ob-name').value.trim(),
-    height: parseFloat($('#ob-height').value),
+    height,
     startWeight: start,
     goalWeight: goal,
     difficulty: $('#ob-diff').value,
     startDate: dateKey(),
-  };
+  }, health);
   state.minWeight = start;
   state.weights = [{ date: dateKey(), kg: start }];
   state.lastDay = dateKey();
@@ -650,8 +691,8 @@ $('#ob-form').addEventListener('submit', (e) => {
   save();
   $('#onboarding').hidden = true;
   render();
-  toast('SISTEMA', `Bem-vindo, Jogador <b>${escapeHtml(state.profile.name)}</b>. Sua primeira Missão Diária foi atribuída.`);
-  showView('quests');
+  toast('SISTEMA', `Bem-vindo, Jogador <b>${escapeHtml(state.profile.name)}</b>. O Sistema analisou seu corpo e gerou seu plano.`);
+  showView('plan');
 });
 
 $('#weight-form').addEventListener('submit', (e) => {
@@ -670,13 +711,12 @@ $('#settings-form').addEventListener('submit', (e) => {
   p.name = $('#cfg-name').value.trim() || p.name;
   p.height = parseFloat($('#cfg-height').value) || p.height;
   p.goalWeight = parseFloat($('#cfg-goal').value) || p.goalWeight;
-  const oldDiff = p.difficulty;
   p.difficulty = $('#cfg-diff').value;
-  if (oldDiff !== p.difficulty) {
-    // recalcula metas de hoje sem perder o progresso já feito
-    const d = today();
-    QUESTS.forEach((q) => { d.targets[q.id] = questTarget(q, state.level, p.difficulty); });
-  }
+  Object.assign(p, readHealthFields('cfg'));
+  // recalcula metas de hoje sem perder o progresso já feito
+  const d = today();
+  const plan = getPlan();
+  QUESTS.forEach((q) => { d.targets[q.id] = questTarget(q, state.level, p.difficulty, plan); });
   checkAchievements();
   save();
   render();
@@ -725,10 +765,211 @@ function escapeHtml(s) {
 
 window.addEventListener('resize', () => { if (state.profile) drawChart(); });
 
+/* ---------------- ficha de saúde ---------------- */
+
+let updateMode = false;
+
+function buildHealthFields() {
+  document.querySelectorAll('.health-fields').forEach((box) => {
+    const px = box.dataset.prefix;
+    const opts = (obj) => Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    box.innerHTML = `
+      <div class="hf-group">
+        <span class="lbl">FICHA DE SAÚDE</span>
+        <label>Sexo biológico <span class="hint">(as fórmulas de metabolismo diferem)</span>
+          <select id="${px}-sex" required>
+            <option value="">Selecione</option>
+            <option value="F">Feminino</option>
+            <option value="M">Masculino</option>
+          </select>
+        </label>
+        <label>Idade <input id="${px}-age" type="number" min="12" max="100" required></label>
+        <label>Nível de atividade atual
+          <select id="${px}-activity" required>${opts(ACTIVITY)}</select>
+          <span class="hint">Seja honesto: superestimar a atividade é o erro mais comum.</span>
+        </label>
+        <label>Ritmo de emagrecimento
+          <select id="${px}-pace" required>${opts(PACE)}</select>
+        </label>
+        <label>Circunferência da cintura (cm) <span class="hint">opcional · medida na altura do umbigo</span>
+          <input id="${px}-waist" type="number" min="40" max="250" step="0.5">
+        </label>
+        <label id="${px}-preg-wrap">Gestação / amamentação
+          <select id="${px}-pregnancy">
+            <option value="nao">Não se aplica</option>
+            <option value="gestante">Estou gestante</option>
+            <option value="lactante">Estou amamentando</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="${px}-conditions">
+          <span>Tenho diabetes, hipertensão, doença cardíaca, renal, hepática, distúrbio alimentar ou uso medicação contínua</span>
+        </label>
+      </div>`;
+    const sex = box.querySelector(`#${px}-sex`);
+    const preg = box.querySelector(`#${px}-preg-wrap`);
+    const sync = () => { preg.hidden = sex.value !== 'F'; };
+    sex.addEventListener('change', sync);
+    sync();
+    box.querySelector(`#${px}-pace`).value = 'recomendado';
+  });
+}
+
+function readHealthFields(px) {
+  const sex = $(`#${px}-sex`).value;
+  const waist = parseFloat($(`#${px}-waist`).value);
+  return {
+    sex,
+    age: parseInt($(`#${px}-age`).value, 10),
+    activity: $(`#${px}-activity`).value,
+    pace: $(`#${px}-pace`).value,
+    waist: waist > 0 ? waist : null,
+    pregnancy: sex === 'F' ? $(`#${px}-pregnancy`).value : 'nao',
+    conditions: $(`#${px}-conditions`).checked,
+  };
+}
+
+function fillHealthFields(px, p) {
+  $(`#${px}-sex`).value = p.sex || '';
+  $(`#${px}-sex`).dispatchEvent(new Event('change'));
+  $(`#${px}-age`).value = p.age || '';
+  $(`#${px}-activity`).value = p.activity || 'sedentario';
+  $(`#${px}-pace`).value = p.pace || 'recomendado';
+  $(`#${px}-waist`).value = p.waist || '';
+  $(`#${px}-pregnancy`).value = p.pregnancy || 'nao';
+  $(`#${px}-conditions`).checked = !!p.conditions;
+}
+
+function openProfileUpdate() {
+  updateMode = true;
+  const p = state.profile;
+  $('#ob-step1').hidden = true;
+  $('#ob-form').hidden = false;
+  $('#ob-intro').textContent = 'O Sistema foi atualizado e precisa de dados adicionais para calcular calorias, água e nutrientes ideais para você.';
+  $('#ob-weight-wrap').hidden = true;
+  $('#ob-weight').required = false;
+  $('#ob-name').value = p.name;
+  $('#ob-height').value = p.height;
+  $('#ob-goal').value = p.goalWeight;
+  $('#ob-diff').value = p.difficulty;
+  $('#ob-submit').textContent = 'GERAR PLANO';
+  fillHealthFields('ob', p);
+  $('#onboarding').hidden = false;
+}
+
+function statBox(label, value, note, cls = '') {
+  const d = el('div', cls);
+  d.append(el('span', 'lbl', label), el('b', '', value));
+  if (note) d.append(el('small', '', note));
+  return d;
+}
+
+function renderPlan() {
+  const plan = getPlan();
+  const warn = $('#plan-warnings');
+  warn.innerHTML = '';
+  if (!plan) return;
+  const p = state.profile;
+
+  plan.warnings.forEach((w) => {
+    const box = el('div', 'warn-box');
+    box.append(el('b', '', '⚠ ALERTA DO SISTEMA'), document.createTextNode(w));
+    warn.append(box);
+  });
+
+  const body = $('#plan-body');
+  body.innerHTML = '';
+  body.append(
+    statBox('IMC', fmtDec(plan.bmi), plan.cat.label, `lvl-${plan.cat.level}`),
+    statBox('PESO SAUDÁVEL', `${fmtDec(plan.healthyMin, 0)}–${fmtDec(plan.healthyMax, 0)} kg`, 'IMC 18,5 a 24,9 p/ sua altura'),
+  );
+  if (plan.waist) {
+    body.append(
+      statBox('CINTURA', `${fmtDec(plan.waist.cm, 0)} cm`, `${plan.waist.risk.label} (ideal < ${plan.waist.risk.elev})`, `lvl-${plan.waist.risk.level}`),
+      statBox('CINTURA / ALTURA', fmtDec(plan.waist.whtr, 2), plan.waist.whtr < 0.5 ? 'Adequada (< 0,5)' : 'Acima do ideal (< 0,5)', plan.waist.whtr < 0.5 ? 'lvl-0' : 'lvl-1'),
+    );
+  }
+
+  // escala de IMC
+  const sc = $('#bmi-scale');
+  sc.innerHTML = '';
+  const zones = [[15, 18.5, '#4cc3ff'], [18.5, 25, '#3ef0a8'], [25, 30, '#ffd166'], [30, 35, '#ff9f43'], [35, 40, '#ff6b6b'], [40, 45, '#ff4d6d']];
+  zones.forEach(([a, b, c]) => { const z = el('span'); z.style.background = c; z.style.flex = String(b - a); sc.append(z); });
+  const pos = clamp((plan.bmi - 15) / 30, 0, 1) * 100;
+  const mk = el('div', 'marker', 'VOCÊ');
+  mk.style.left = `${pos}%`;
+  sc.append(mk);
+  let legend = sc.nextElementSibling;
+  if (!legend || !legend.classList.contains('bmi-legend')) {
+    legend = el('div', 'bmi-legend');
+    ['15', '18,5', '25', '30', '35', '40+'].forEach((t) => legend.append(el('span', '', t)));
+    sc.after(legend);
+  }
+
+  const hero = $('#plan-kcal');
+  hero.innerHTML = '';
+  hero.append(el('div', 'unit', 'META DIÁRIA'), el('div', 'num', fmtInt(plan.kcal)), el('div', 'unit', 'KCAL / DIA'));
+
+  const en = $('#plan-energy');
+  en.innerHTML = '';
+  en.append(
+    statBox('METABOLISMO BASAL', `${fmtInt(plan.bmr)} kcal`, 'gasto em repouso total'),
+    statBox('GASTO TOTAL', `${fmtInt(plan.tdee)} kcal`, 'com seu nível de atividade'),
+    statBox('DÉFICIT', `${fmtInt(plan.deficit)} kcal`, plan.restricted ? 'sem déficit (segurança)' : 'por dia'),
+    statBox('RITMO ESTIMADO', `${fmtDec(plan.pacePerWeek, 2)} kg/sem`, 'sem contar os exercícios'),
+  );
+  if (plan.goalDate) {
+    const weeks = Math.ceil(plan.weeks);
+    en.append(statBox('FALTAM', fmtKg(plan.toGoal), 'até a meta'), statBox('PREVISÃO DA META', plan.goalDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }), `~${weeks} semanas`));
+  }
+
+  const mac = $('#plan-macros');
+  mac.innerHTML = '';
+  const total = plan.protein * 4 + plan.carbs * 4 + plan.fat * 9;
+  [
+    ['Proteína', plan.protein, plan.protein * 4, 'm-prot', 'carnes magras, ovos, laticínios, leguminosas'],
+    ['Carboidratos', plan.carbs, plan.carbs * 4, 'm-carb', 'prefira integrais, frutas e tubérculos'],
+    ['Gorduras', plan.fat, plan.fat * 9, 'm-fat', 'azeite, castanhas, abacate, peixes'],
+  ].forEach(([n, g, kc, cls, tip]) => {
+    const m = el('div', 'macro');
+    const head = el('div', 'm-head');
+    const left = el('span', '', n);
+    left.append(el('small', '', ` · ${tip}`));
+    head.append(left, el('span', '', `${g} g`));
+    const bar = el('div', 'bar');
+    const f = el('div', `bar-fill ${cls}`);
+    f.style.width = `${(kc / total) * 100}%`;
+    bar.append(f);
+    m.append(head, bar);
+    mac.append(m);
+  });
+  const fib = el('div', 'macro');
+  const fh = el('div', 'm-head');
+  const fl = el('span', '', 'Fibras');
+  fl.append(el('small', '', ' · verduras, legumes, frutas, aveia, feijão'));
+  fh.append(fl, el('span', '', `≥ ${plan.fiber} g`));
+  fib.append(fh);
+  mac.append(fib);
+
+  const hb = $('#plan-habits');
+  hb.innerHTML = '';
+  hb.append(
+    statBox('ÁGUA', fmtL(plan.waterMl), `${plan.waterCups} copos de 250 ml`),
+    statBox('SONO', plan.sleep, 'por noite'),
+    statBox('PASSOS', '7.000–10.000', 'por dia'),
+    statBox('ATIVIDADE', '150–300 min', 'moderada/semana + força 2×'),
+  );
+}
+
 /* ---------------- início ---------------- */
+
+buildHealthFields();
 
 if (!state.profile) {
   $('#onboarding').hidden = false;
+} else if (!healthProfileComplete(state.profile)) {
+  openProfileUpdate();
+  rollover();
+  render();
 } else {
   rollover();
   render();

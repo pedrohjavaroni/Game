@@ -19,6 +19,27 @@ Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, r
   Cada nível dá 3 pontos para distribuir em FOR, AGI, VIT, PER e INT.
 - **Conquistas e títulos**: 16 conquistas; toque numa desbloqueada para equipar o título.
 
+## Plano personalizado (aba ✚ Plano)
+
+No cadastro o Sistema pede altura, peso, meta, sexo, idade, nível de atividade, ritmo desejado,
+cintura (opcional), gestação/amamentação e condições de saúde, e calcula:
+
+| Item | Como é calculado |
+|---|---|
+| Metabolismo basal (TMB) | Mifflin-St Jeor |
+| Gasto total | TMB × fator de atividade (1,2 a 1,725) |
+| Meta calórica | Gasto total − déficit do ritmo (0,25 / 0,5 / 0,75 kg/sem; 7.700 kcal ≈ 1 kg), com déficit máximo de 25% e piso de 1.200 kcal (mulheres) / 1.500 kcal (homens) |
+| Proteína | 1,6 g/kg do peso de referência (peso no IMC 25 se acima) |
+| Gordura / carboidratos / fibras | ~28% das kcal / restante / 14 g por 1.000 kcal |
+| Água | ~35 ml/kg (1,5–4 L), +300 ml gestação, +700 ml amamentação |
+| IMC, faixa de peso saudável, cintura e cintura/altura | faixas da OMS / IDF |
+| Sono, passos e atividade semanal | 7–9 h · 7–10 mil passos · 150–300 min (OMS 2020) |
+
+Regras de segurança: menores de 18, gestantes/lactantes e IMC < 18,5 não recebem déficit calórico;
+condições de saúde e IMC ≥ 35 geram alertas recomendando acompanhamento médico.
+O plano é recalculado a cada novo peso, e as missões de **água, meta calórica, proteína e sono**
+usam esses números. Quem já tinha um save recebe um pedido para completar a ficha de saúde.
+
 ## Como abrir
 
 É só HTML/CSS/JS, sem instalação. Opções:

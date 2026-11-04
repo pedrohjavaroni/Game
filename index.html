@@ -80,6 +80,47 @@
       </div>
     </section>
 
+    <!-- PLANO -->
+    <section class="view" id="view-plan">
+      <div id="plan-warnings"></div>
+      <div class="panel">
+        <div class="panel-title">AVALIAÇÃO CORPORAL</div>
+        <div class="mini-stats" id="plan-body"></div>
+        <div class="bmi-scale" id="bmi-scale"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">ENERGIA DIÁRIA</div>
+        <div class="kcal-hero" id="plan-kcal"></div>
+        <div class="mini-stats" id="plan-energy"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">MACRONUTRIENTES</div>
+        <div id="plan-macros"></div>
+        <div class="plate">
+          <b>Montagem do prato</b>
+          <p class="sys-text small">½ do prato com legumes e verduras · ¼ com proteína (carne magra, frango, peixe, ovos, feijão, tofu) · ¼ com carboidrato de preferência integral (arroz, batata, mandioca, macarrão integral). Prefira água a bebidas açucaradas.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">HIDRATAÇÃO · SONO · MOVIMENTO</div>
+        <div class="mini-stats" id="plan-habits"></div>
+        <p class="sys-text small">Some ~500 ml de água por hora de exercício ou em dias muito quentes. Urina clara é um bom sinal de hidratação.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title">COMO O SISTEMA CALCULA</div>
+        <ul class="sources">
+          <li><b>TMB</b> (gasto em repouso): fórmula de Mifflin-St Jeor.</li>
+          <li><b>Gasto total</b>: TMB × fator do seu nível de atividade.</li>
+          <li><b>Meta calórica</b>: gasto total − déficit do ritmo escolhido (7.700 kcal ≈ 1 kg), com déficit máximo de 25% e mínimo de 1.200 kcal (mulheres) / 1.500 kcal (homens).</li>
+          <li><b>Proteína</b>: 1,6 g por kg do peso de referência (peso no IMC 25, se você estiver acima), para preservar músculo.</li>
+          <li><b>Gordura</b> ~28% das calorias; <b>carboidratos</b> no restante; <b>fibras</b> 14 g por 1.000 kcal.</li>
+          <li><b>Água</b>: ~35 ml por kg (entre 1,5 e 4 L).</li>
+          <li><b>IMC</b> e <b>cintura</b>: faixas da OMS. <b>Atividade</b>: OMS 2020. <b>Sono</b>: adultos 7–9 h.</li>
+        </ul>
+        <p class="sys-text small">O plano é recalculado conforme você registra novos pesos. São estimativas e não substituem a avaliação de médico ou nutricionista.</p>
+      </div>
+    </section>
+
     <!-- PESO -->
     <section class="view" id="view-weight">
       <div class="panel">
@@ -119,6 +160,7 @@
           <label>Nome <input id="cfg-name" required maxlength="24"></label>
           <label>Altura (cm) <input id="cfg-height" type="number" min="100" max="250" required></label>
           <label>Peso meta (kg) <input id="cfg-goal" type="number" step="0.1" min="30" max="400" required></label>
+          <div class="health-fields" data-prefix="cfg"></div>
           <label>Dificuldade
             <select id="cfg-diff">
               <option value="iniciante">Iniciante (metade das repetições)</option>
@@ -148,6 +190,7 @@
   <nav class="tabbar">
     <button data-view="status" class="active"><span>◆</span>Status</button>
     <button data-view="quests"><span>!</span>Missões</button>
+    <button data-view="plan"><span>✚</span>Plano</button>
     <button data-view="weight"><span>⚖</span>Peso</button>
     <button data-view="achievements"><span>★</span>Títulos</button>
     <button data-view="settings"><span>⚙</span>Config</button>
@@ -165,11 +208,12 @@
         </div>
       </div>
       <form id="ob-form" class="form" hidden>
-        <p class="sys-text">O Sistema precisa registrar seus dados iniciais.</p>
+        <p class="sys-text" id="ob-intro">O Sistema precisa registrar seus dados iniciais para calcular seu plano.</p>
         <label>Nome do Jogador <input id="ob-name" required maxlength="24"></label>
         <label>Altura (cm) <input id="ob-height" type="number" min="100" max="250" required></label>
-        <label>Peso atual (kg) <input id="ob-weight" type="number" step="0.1" min="30" max="400" required></label>
+        <label id="ob-weight-wrap">Peso atual (kg) <input id="ob-weight" type="number" step="0.1" min="30" max="400" required></label>
         <label>Peso meta (kg) <input id="ob-goal" type="number" step="0.1" min="30" max="400" required></label>
+        <div class="health-fields" data-prefix="ob"></div>
         <label>Dificuldade
           <select id="ob-diff">
             <option value="iniciante">Iniciante (recomendado para começar)</option>
@@ -177,7 +221,7 @@
             <option value="dificil">Difícil</option>
           </select>
         </label>
-        <button class="btn" type="submit">DESPERTAR</button>
+        <button class="btn" type="submit" id="ob-submit">DESPERTAR</button>
       </form>
     </div>
   </div>
@@ -185,6 +229,7 @@
   <!-- System notifications -->
   <div id="toasts"></div>
 
+  <script src="health.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
