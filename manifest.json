@@ -1,10 +1,10 @@
 {
-  "name": "O Sistema",
-  "short_name": "Sistema",
-  "description": "Emagreça subindo de nível com missões diárias.",
+  "name": "Fit Game",
+  "short_name": "Fit Game",
+  "description": "Emagreça subindo de nível: missões diárias, XP, ranks e plano personalizado.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#050914",
+  "background_color": "#081733",
   "theme_color": "#050914",
   "icons": [
     {

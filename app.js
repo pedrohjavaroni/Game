@@ -1,7 +1,7 @@
 'use strict';
 
 /* =========================================================
-   O SISTEMA — gamificação de emagrecimento
+   FIT GAME — gamificação de emagrecimento
    Todos os dados ficam no localStorage deste aparelho.
    ========================================================= */
 
@@ -727,7 +727,7 @@ $('#export-btn').onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `sistema-backup-${dateKey()}.json`;
+  a.download = `fitgame-backup-${dateKey()}.json`;
   a.click();
   state.lastBackup = dateKey();
   save();

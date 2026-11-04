@@ -1,4 +1,4 @@
-# O Sistema — emagreça subindo de nível
+# Fit Game — emagreça subindo de nível
 
 Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, recebe uma
 **Missão Diária** todos os dias e fica mais forte (de verdade) a cada nível.
