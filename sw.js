@@ -1,5 +1,5 @@
-const CACHE = 'fitgame-v4';
-const ASSETS = ['./', './index.html', './style.css', './health.js', './app.js', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable.png'];
+const CACHE = 'fitgame-v5';
+const ASSETS = ['./', './index.html', './style.css', './health.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
@@ -15,7 +15,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-cache' })
       .then((res) => {
         if (res.ok && new URL(e.request.url).origin === location.origin) {
           const copy = res.clone();

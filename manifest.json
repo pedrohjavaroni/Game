@@ -8,25 +8,25 @@
   "theme_color": "#050914",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "fitgame-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "fitgame-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable.png",
+      "src": "fitgame-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon.svg",
+      "src": "fitgame-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
