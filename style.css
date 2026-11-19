@@ -309,3 +309,36 @@ body.report-open { overflow: hidden; }
   #report-body .rep { box-shadow: none; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---------- Treino próprio / força / medidas ---------- */
+.seg-toggle { display: flex; gap: 6px; }
+.seg-toggle .btn { flex: 1; }
+.seg-toggle .btn.active { border-color: var(--gold); color: var(--gold); background: rgba(255,209,102,.12); }
+textarea {
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; color: #fff; line-height: 1.4;
+  background: rgba(5,12,28,.8); border: 1px solid rgba(76,195,255,.45); padding: 9px 10px; border-radius: 3px; width: 100%; resize: vertical;
+}
+textarea:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 8px var(--glow); }
+#gym-custom-preview .workout { margin-top: 8px; }
+.prev-head { display: flex; justify-content: space-between; gap: 8px; }
+.prev-head small { color: var(--gold); white-space: nowrap; }
+
+.quick-lift { border: 1px dashed rgba(255,209,102,.4); padding: 10px; margin-bottom: 14px; }
+.quick-lift .lbl { color: var(--gold); }
+.quick-row { display: grid; grid-template-columns: 1.2fr .8fr 1.3fr; gap: 6px; }
+.quick-row input { padding: 8px 6px; font-size: 15px; }
+.strength-pick { margin: 4px 0 6px; }
+.chart-box { margin: 8px 0 4px; }
+.line-chart { width: 100%; height: auto; display: block; }
+
+.measure-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.form label.measure-field { gap: 2px; font-size: 13px; color: var(--text); }
+.measure-field .hint { font-size: 11px; line-height: 1.2; }
+.m-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.m-table th { text-align: left; font-size: 11px; letter-spacing: 1px; color: var(--muted); font-weight: 600; padding: 4px; border-bottom: 1px solid rgba(76,195,255,.3); }
+.m-table td { padding: 6px 4px; border-bottom: 1px solid rgba(76,195,255,.12); }
+.m-table tr { cursor: pointer; }
+.m-table .num { text-align: right; white-space: nowrap; }
+.m-table .good { color: var(--ok); } .m-table .bad { color: var(--danger); }
+.form-inline { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 14px; }
+.form-inline select { flex: 1; }

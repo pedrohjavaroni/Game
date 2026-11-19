@@ -8,11 +8,13 @@
 const STORAGE_KEY = 'sistema-save-v1';
 
 const QUESTS = [
-  { id: 'pushups', bw: true, name: 'Flexões', sub: 'Vale com joelho apoiado', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
-  { id: 'situps', bw: true, name: 'Abdominais', sub: 'Qualquer variação', stat: 'VIT', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
-  { id: 'squats', bw: true, name: 'Agachamentos', sub: 'Desça até onde for confortável', stat: 'FOR', base: 10, step: 3, max: 100, incs: [1, 5, 10], scale: true },
+  { id: 'pushups', bw: true, name: 'Flexões', sub: 'Pode dividir em séries ao longo do dia', stat: 'FOR', base: 20, step: 4, max: 150, incs: [1, 5, 10], scale: true },
+  { id: 'situps', bw: true, name: 'Abdominais', sub: 'Qualquer variação', stat: 'VIT', base: 25, step: 4, max: 150, incs: [1, 5, 10], scale: true },
+  { id: 'squats', bw: true, name: 'Agachamentos', sub: 'Amplitude completa, sem pressa', stat: 'FOR', base: 30, step: 5, max: 200, incs: [1, 5, 10], scale: true },
+  { id: 'plank', bw: true, name: 'Prancha', sub: 'Tempo total no dia (pode somar séries)', stat: 'VIT', unit: ' s', base: 60, step: 6, max: 300, incs: [15, 30], scale: true },
+  { id: 'burpees', bw: true, name: 'Burpees', sub: 'Sem salto, se preferir menos impacto', stat: 'AGI', base: 10, step: 2, max: 80, incs: [1, 5], scale: true },
   { id: 'gym', gymOnly: true, name: 'Treino na academia', sub: () => 'Finalize o treino do dia na aba Treino', stat: 'FOR', check: true },
-  { id: 'walk', name: 'Caminhada / Corrida', sub: 'Distância total do dia', stat: 'AGI', unit: ' km', base: 1, step: 0.25, max: 10, incs: [0.5, 1], scale: true, decimal: true },
+  { id: 'walk', name: 'Caminhada / Corrida', sub: 'Distância total do dia', stat: 'AGI', unit: ' km', base: 2, step: 0.3, max: 12, incs: [0.5, 1], scale: true, decimal: true },
   { id: 'water', name: 'Hidratação', sub: (p) => `${fmtL(p.waterMl)} por dia · copos de 250 ml`, stat: 'VIT', base: 8, dyn: (p) => p.waterCups, incs: [1] },
   { id: 'calories', name: 'Meta calórica', sub: (p) => `Comer perto de ${fmtInt(p.kcal)} kcal (±10%)`, stat: 'INT', check: true },
   { id: 'protein', name: 'Proteína', sub: (p) => `Atingir ~${p.protein} g de proteína no dia`, stat: 'VIT', check: true },
@@ -32,7 +34,8 @@ const STATS = [
   { id: 'INT', name: 'INTELIGÊNCIA' },
 ];
 
-const DIFF_MULT = { iniciante: 0.5, normal: 1, dificil: 1.5 };
+const DIFF_MULT = { iniciante: 0.6, normal: 1, dificil: 1.5, extremo: 2 };
+const QUEST_VERSION = 2; // sobe quando as metas das missões mudam
 
 const XP_PER_QUEST = 15;
 const XP_DAILY_BONUS = 50;
@@ -58,9 +61,9 @@ const ACHIEVEMENTS = [
   { id: 'lvl10', title: 'Caçador', desc: 'Alcance o nível 10 (Rank D)' },
   { id: 'lvl30', title: 'Veterano', desc: 'Alcance o nível 30 (Rank B)' },
   { id: 'lvl60', title: 'Lenda Viva', desc: 'Alcance o nível 60 (Rank S)' },
-  { id: 'kg1', title: 'Primeiro Passo', desc: 'Perca 1 kg' },
-  { id: 'kg5', title: 'Metamorfose', desc: 'Perca 5 kg' },
-  { id: 'kg10', title: 'Corpo Forjado', desc: 'Perca 10 kg' },
+  { id: 'kg1', title: 'Primeiro Passo', desc: 'Avance 1 kg rumo à meta (perder ou ganhar)' },
+  { id: 'kg5', title: 'Metamorfose', desc: 'Avance 5 kg rumo à meta' },
+  { id: 'kg10', title: 'Corpo Forjado', desc: 'Avance 10 kg rumo à meta' },
   { id: 'goal', title: 'Renascido', desc: 'Alcance o peso meta' },
   { id: 'penalty', title: 'Sobrevivente', desc: 'Conclua uma Missão de Penalidade' },
   { id: 'dungeon1', title: 'Explorador de Masmorras', desc: 'Conquiste uma Masmorra Semanal' },
@@ -74,6 +77,10 @@ const ACHIEVEMENTS = [
   { id: 'gymweek4', title: 'Constância de Aço', desc: '4 semanas perfeitas na academia' },
   { id: 'pr1', title: 'Quebra-Recordes', desc: 'Supere uma carga pela primeira vez' },
   { id: 'pr10', title: 'Força Crescente', desc: '10 recordes pessoais' },
+  { id: 'measure1', title: 'Fita Métrica', desc: 'Registre suas medidas corporais' },
+  { id: 'measure5', title: 'Escultor do Corpo', desc: 'Registre as medidas 5 vezes' },
+  { id: 'arm1', title: 'Braço de Aço', desc: 'Ganhe 1 cm de braço' },
+  { id: 'waist5', title: 'Cintura Afiada', desc: 'Reduza 5 cm de cintura' },
 ];
 
 /* ---------------- utilidades ---------------- */
@@ -118,6 +125,7 @@ function defaultState() {
     days: {},
     weights: [],
     minWeight: null,
+    maxWeight: null,
     streak: 0,
     bestStreak: 0,
     dailiesDone: 0,
@@ -176,6 +184,7 @@ function questTarget(q, lvl, diff, plan) {
   let t = Math.min(q.max, q.base + (lvl - 1) * q.step);
   if (q.scale) t *= DIFF_MULT[diff] || 1;
   if (q.decimal) return Math.max(0.5, Math.round(t * 2) / 2);
+  if (q.unit === ' s') return Math.max(15, Math.round(t / 5) * 5);
   return Math.max(5, Math.round(t));
 }
 
@@ -197,6 +206,14 @@ function today() {
     const plan = getPlan();
     const diff = state.profile ? state.profile.difficulty : 'normal';
     QUESTS.forEach((q) => { if (d.targets[q.id] == null) d.targets[q.id] = questTarget(q, state.level, diff, plan); });
+  }
+  // metas novas das missões valem a partir de hoje (o progresso já feito é mantido)
+  if (state.questVersion !== QUEST_VERSION) {
+    state.questVersion = QUEST_VERSION;
+    if (!d.completed && state.profile) {
+      const plan = getPlan();
+      QUESTS.forEach((q) => { d.targets[q.id] = questTarget(q, state.level, state.profile.difficulty, plan); });
+    }
   }
   return d;
 }
@@ -303,15 +320,39 @@ function logWeight(kg) {
     d.weighed = true;
     gainXp(XP_WEIGH_IN, 'Pesagem registrada.');
   }
+  const gt = goalTypeOf(state.profile);
   if (state.minWeight == null) state.minWeight = state.profile.startWeight;
+  if (state.maxWeight == null) state.maxWeight = state.profile.startWeight;
   if (kg < state.minWeight) {
-    const lost = state.minWeight - kg;
+    const diff = state.minWeight - kg;
     state.minWeight = kg;
-    gainXp(Math.round(lost * XP_PER_KG), `Novo recorde: ${fmtKg(kg)}!`);
+    if (gt === 'perder') gainXp(Math.round(diff * XP_PER_KG), `Novo recorde: ${fmtKg(kg)}!`);
+  }
+  if (kg > state.maxWeight) {
+    const diff = kg - state.maxWeight;
+    state.maxWeight = kg;
+    if (gt === 'ganhar') gainXp(Math.round(diff * XP_PER_KG), `Novo recorde: ${fmtKg(kg)}!`);
   }
   checkAchievements();
   save();
   render();
+}
+
+// quantos kg o jogador já avançou na direção da meta (melhor marca)
+function goalProgressKg() {
+  const p = state.profile;
+  const gt = goalTypeOf(p);
+  if (gt === 'perder') return p.startWeight - (state.minWeight ?? p.startWeight);
+  if (gt === 'ganhar') return (state.maxWeight ?? p.startWeight) - p.startWeight;
+  return 0;
+}
+
+function goalReached() {
+  const p = state.profile;
+  const gt = goalTypeOf(p);
+  if (gt === 'perder') return (state.minWeight ?? Infinity) <= p.goalWeight;
+  if (gt === 'ganhar') return (state.maxWeight ?? -Infinity) >= p.goalWeight;
+  return false;
 }
 
 function currentWeight() {
@@ -343,7 +384,7 @@ function claimDungeon() {
 
 function checkAchievements() {
   if (!state.profile) return;
-  const lost = state.profile.startWeight - (state.minWeight ?? state.profile.startWeight);
+  const lost = goalProgressKg();
   const dungeons = Object.keys(state.dungeons).length;
   const cond = {
     awaken: state.dailiesDone >= 1,
@@ -357,12 +398,13 @@ function checkAchievements() {
     kg1: lost >= 1,
     kg5: lost >= 5,
     kg10: lost >= 10,
-    goal: (state.minWeight ?? Infinity) <= state.profile.goalWeight,
+    goal: goalReached(),
     penalty: state.penaltiesDone >= 1,
     dungeon1: dungeons >= 1,
     dungeon4: dungeons >= 4,
     weigh10: state.weights.length >= 10,
     ...gymAchievementConds(),
+    ...measureAchievementConds(),
   };
   ACHIEVEMENTS.forEach((a) => {
     if (cond[a.id] && !state.achievements[a.id]) {
@@ -398,6 +440,7 @@ function render() {
   renderWeight();
   renderPlan();
   renderGym();
+  renderMeasures();
   renderAchievements();
 }
 
@@ -418,7 +461,7 @@ function renderStatus() {
 
   const cw = currentWeight();
   const total = p.startWeight - p.goalWeight;
-  const prog = total > 0 ? clamp((p.startWeight - cw) / total, 0, 1) : 1;
+  const prog = total !== 0 ? clamp((p.startWeight - cw) / total, 0, 1) : 1;
   $('#st-body').textContent = `${Math.round(prog * 100)}%`;
   $('#st-body-bar').style.width = `${prog * 100}%`;
   $('#st-weight').textContent = fmtKg(cw);
@@ -560,11 +603,12 @@ function renderWeight() {
   });
 
   const cw = currentWeight();
-  const lost = p.startWeight - cw;
-  const remain = cw - p.goalWeight;
+  const gt = goalTypeOf(p);
+  const moved = gt === 'ganhar' ? cw - p.startWeight : p.startWeight - cw;
+  const remain = gt === 'ganhar' ? p.goalWeight - cw : cw - p.goalWeight;
   const sum = $('#weight-summary');
   sum.innerHTML = '';
-  [['INICIAL', fmtKg(p.startWeight)], ['ATUAL', fmtKg(cw)], ['PERDIDO', fmtKg(Math.max(0, lost))], ['FALTAM', fmtKg(Math.max(0, remain))]]
+  [['INICIAL', fmtKg(p.startWeight)], ['ATUAL', fmtKg(cw)], [gt === 'ganhar' ? 'GANHO' : gt === 'manter' ? 'VARIAÇÃO' : 'PERDIDO', gt === 'manter' ? fmtKg(Math.abs(cw - p.startWeight)) : fmtKg(Math.max(0, moved))], [gt === 'manter' ? 'DA META' : 'FALTAM', gt === 'manter' ? fmtKg(Math.abs(cw - p.goalWeight)) : fmtKg(Math.max(0, remain))]]
     .forEach(([l, v]) => { const d = el('div'); d.append(el('span', 'lbl', l), el('b', '', v)); sum.append(d); });
 
   drawChart();
@@ -683,9 +727,10 @@ $('#ob-form').addEventListener('submit', (e) => {
   const height = parseFloat($('#ob-height').value);
   const health = readHealthFields('ob');
   const minHealthy = 18.5 * (height / 100) ** 2;
-  if (goal < minHealthy && !confirm(`Sua meta está abaixo do peso saudável mínimo para sua altura (~${fmtDec(minHealthy)} kg, IMC 18,5). Deseja continuar mesmo assim?`)) return;
+  if (health.goalType === 'perder' && goal < minHealthy && !confirm(`Sua meta está abaixo do peso saudável mínimo para sua altura (~${fmtDec(minHealthy)} kg, IMC 18,5). Deseja continuar mesmo assim?`)) return;
 
   if (updateMode) {
+    if (!validGoal(health.goalType, currentWeight(), goal)) return;
     Object.assign(state.profile, { name: $('#ob-name').value.trim(), height, goalWeight: goal, difficulty: $('#ob-diff').value }, health);
     const d = today();
     const plan = getPlan();
@@ -699,7 +744,7 @@ $('#ob-form').addEventListener('submit', (e) => {
   }
 
   const start = parseFloat($('#ob-weight').value);
-  if (goal >= start) { alert('O peso meta precisa ser menor que o peso atual.'); return; }
+  if (!validGoal(health.goalType, start, goal)) return;
   state = defaultState();
   state.profile = Object.assign({
     name: $('#ob-name').value.trim(),
@@ -710,6 +755,8 @@ $('#ob-form').addEventListener('submit', (e) => {
     startDate: dateKey(),
   }, health);
   state.minWeight = start;
+  state.maxWeight = start;
+  state.questVersion = QUEST_VERSION;
   state.weights = [{ date: dateKey(), kg: start }];
   state.lastDay = dateKey();
   today();
@@ -735,7 +782,10 @@ $('#settings-form').addEventListener('submit', (e) => {
   const p = state.profile;
   p.name = $('#cfg-name').value.trim() || p.name;
   p.height = parseFloat($('#cfg-height').value) || p.height;
-  p.goalWeight = parseFloat($('#cfg-goal').value) || p.goalWeight;
+  const newGoal = parseFloat($('#cfg-goal').value) || p.goalWeight;
+  const newType = $('#cfg-goalType').value;
+  if (!validGoal(newType, currentWeight(), newGoal)) return;
+  p.goalWeight = newGoal;
   p.difficulty = $('#cfg-diff').value;
   Object.assign(p, readHealthFields('cfg'));
   // recalcula metas de hoje sem perder o progresso já feito
@@ -786,6 +836,12 @@ $('#reset-btn').onclick = () => {
   location.reload();
 };
 
+function validGoal(type, weight, goal) {
+  if (type === 'perder' && goal >= weight) { alert('Para PERDER peso, a meta precisa ser menor que o peso atual. Se quer ganhar peso, troque o objetivo para "Ganhar peso".'); return false; }
+  if (type === 'ganhar' && goal <= weight) { alert('Para GANHAR peso, a meta precisa ser maior que o peso atual. Se quer emagrecer, troque o objetivo para "Perder peso".'); return false; }
+  return true;
+}
+
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -803,6 +859,9 @@ function buildHealthFields() {
     box.innerHTML = `
       <div class="hf-group">
         <span class="lbl">FICHA DE SAÚDE</span>
+        <label>Objetivo
+          <select id="${px}-goalType" required>${opts(GOALS)}</select>
+        </label>
         <label>Sexo biológico <span class="hint">(as fórmulas de metabolismo diferem)</span>
           <select id="${px}-sex" required>
             <option value="">Selecione</option>
@@ -815,7 +874,7 @@ function buildHealthFields() {
           <select id="${px}-activity" required>${opts(ACTIVITY)}</select>
           <span class="hint">Seja honesto: superestimar a atividade é o erro mais comum.</span>
         </label>
-        <label>Ritmo de emagrecimento
+        <label>Ritmo (de perda ou de ganho)
           <select id="${px}-pace" required>${opts(PACE)}</select>
         </label>
         <label>Circunferência da cintura (cm) <span class="hint">opcional · medida na altura do umbigo</span>
@@ -846,6 +905,7 @@ function readHealthFields(px) {
   const waist = parseFloat($(`#${px}-waist`).value);
   return {
     sex,
+    goalType: $(`#${px}-goalType`).value,
     age: parseInt($(`#${px}-age`).value, 10),
     activity: $(`#${px}-activity`).value,
     pace: $(`#${px}-pace`).value,
@@ -858,6 +918,7 @@ function readHealthFields(px) {
 function fillHealthFields(px, p) {
   $(`#${px}-sex`).value = p.sex || '';
   $(`#${px}-sex`).dispatchEvent(new Event('change'));
+  $(`#${px}-goalType`).value = goalTypeOf(p);
   $(`#${px}-age`).value = p.age || '';
   $(`#${px}-activity`).value = p.activity || 'sedentario';
   $(`#${px}-pace`).value = p.pace || 'recomendado';
@@ -941,8 +1002,10 @@ function renderPlan() {
   en.append(
     statBox('METABOLISMO BASAL', `${fmtInt(plan.bmr)} kcal`, 'gasto em repouso total'),
     statBox('GASTO TOTAL', `${fmtInt(plan.tdee)} kcal`, 'com seu nível de atividade'),
-    statBox('DÉFICIT', `${fmtInt(plan.deficit)} kcal`, plan.restricted ? 'sem déficit (segurança)' : 'por dia'),
-    statBox('RITMO ESTIMADO', `${fmtDec(plan.pacePerWeek, 2)} kg/sem`, 'sem contar os exercícios'),
+    plan.surplus > 0
+      ? statBox('SUPERÁVIT', `+${fmtInt(plan.surplus)} kcal`, 'por dia, p/ ganhar massa')
+      : statBox('DÉFICIT', `${fmtInt(plan.deficit)} kcal`, plan.restricted ? 'sem déficit (segurança)' : plan.goalType === 'manter' ? 'manutenção' : 'por dia'),
+    statBox('RITMO ESTIMADO', `${fmtDec(plan.pacePerWeek, 2)} kg/sem`, plan.goalType === 'ganhar' ? 'de ganho, com treino de força' : plan.goalType === 'manter' ? 'peso estável' : 'sem contar os exercícios'),
   );
   if (plan.goalDate) {
     const weeks = Math.ceil(plan.weeks);
@@ -991,6 +1054,7 @@ function renderPlan() {
 
 buildHealthFields();
 initGymEvents();
+initMeasures();
 initReport();
 $('#open-achievements').onclick = () => showView('achievements');
 

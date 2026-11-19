@@ -93,12 +93,22 @@
     <section class="view" id="view-gym">
       <div class="panel" id="gym-setup" data-editing="0">
         <div class="panel-title">PLANO DE ACADEMIA</div>
-        <p class="sys-text">Escolha os dias em que você vai à academia. O Fit Game monta a divisão de treino da semana e as metas de presença.</p>
-        <form id="gym-setup-form" class="form">
+        <form id="gym-setup-form" class="form" data-mode="app">
+          <div class="seg-toggle" id="gym-mode">
+            <button type="button" class="btn mini active" data-mode="app">PLANO DO APP</button>
+            <button type="button" class="btn mini" data-mode="custom">MEU PRÓPRIO TREINO</button>
+          </div>
+          <span class="lbl">DIAS DE ACADEMIA</span>
           <div class="day-picker" id="gym-days"></div>
-          <label>Experiência na musculação <select id="gym-level"></select></label>
+          <label id="gym-level-wrap">Experiência na musculação <select id="gym-level"></select></label>
+          <div id="gym-custom-wrap" class="form" hidden>
+            <p class="sys-text small">Cole aqui o treino que você já faz (do personal, de uma nota, do WhatsApp). Use <b>um exercício por linha</b> com séries × repetições, e uma linha de título para cada treino.</p>
+            <textarea id="gym-custom-text" rows="12" spellcheck="false" placeholder="Treino A - Peito e tríceps&#10;Supino reto 4x10&#10;Crucifixo 3x12&#10;Tríceps corda 4x12&#10;&#10;Treino B - Costas&#10;Puxada frontal 4x10&#10;Remada baixa 4x12"></textarea>
+            <button type="button" class="btn mini" id="gym-example">VER UM EXEMPLO</button>
+            <div id="gym-custom-preview"></div>
+          </div>
           <p class="sys-text small">Nos dias de academia, o treino entra na Missão Diária no lugar de flexões, abdominais e agachamentos. Para quem está emagrecendo, 3 a 4 dias por semana é um ótimo começo.</p>
-          <button class="btn" type="submit">GERAR PLANO DE TREINO</button>
+          <button class="btn" type="submit" id="gym-submit">GERAR PLANO DE TREINO</button>
           <button class="btn danger" type="button" id="gym-cancel">CANCELAR</button>
         </form>
       </div>
@@ -115,13 +125,17 @@
           <div id="gym-today"></div>
         </div>
         <div class="panel">
+          <div class="panel-title">PROGRESSÃO DE FORÇA</div>
+          <div id="gym-strength"></div>
+        </div>
+        <div class="panel">
           <div class="panel-title">METAS DE PRESENÇA</div>
           <div id="gym-goals"></div>
         </div>
         <div class="panel">
           <div class="panel-title">DIVISÃO DA SEMANA</div>
           <div id="gym-plan"></div>
-          <button class="btn full" id="gym-edit">EDITAR DIAS / NÍVEL</button>
+          <button class="btn full" id="gym-edit">EDITAR DIAS / TREINO</button>
         </div>
         <div class="panel">
           <div class="panel-title">RECORDES PESSOAIS</div>
@@ -166,7 +180,8 @@
         <ul class="sources">
           <li><b>TMB</b> (gasto em repouso): fórmula de Mifflin-St Jeor.</li>
           <li><b>Gasto total</b>: TMB × fator do seu nível de atividade.</li>
-          <li><b>Meta calórica</b>: gasto total − déficit do ritmo escolhido (7.700 kcal ≈ 1 kg), com déficit máximo de 25% e mínimo de 1.200 kcal (mulheres) / 1.500 kcal (homens).</li>
+          <li><b>Meta calórica</b>: para perder, gasto total − déficit do ritmo escolhido (7.700 kcal ≈ 1 kg), com déficit máximo de 25% e mínimo de 1.200 kcal (mulheres) / 1.500 kcal (homens). Para ganhar, gasto total + superávit de até 500 kcal. Para manter, o próprio gasto total.</li>
+          <li><b>Proteína ao ganhar massa</b>: 1,8 g por kg do peso de referência.</li>
           <li><b>Proteína</b>: 1,6 g por kg do peso de referência (peso no IMC 25, se você estiver acima), para preservar músculo.</li>
           <li><b>Gordura</b> ~28% das calorias; <b>carboidratos</b> no restante; <b>fibras</b> 14 g por 1.000 kcal.</li>
           <li><b>Água</b>: ~35 ml por kg (entre 1,5 e 4 L).</li>
@@ -184,14 +199,33 @@
           <input type="number" step="0.1" min="30" max="400" id="weight-input" placeholder="Peso de hoje (kg)" required>
           <button class="btn" type="submit">REGISTRAR</button>
         </form>
-        <p class="sys-text small">+10 XP por pesagem diária · +100 XP por cada kg abaixo do seu menor peso</p>
+        <p class="sys-text small">+10 XP por pesagem diária · +100 XP por kg de novo recorde na direção da sua meta</p>
         <canvas id="weight-chart" height="220"></canvas>
         <div class="mini-stats" id="weight-summary"></div>
         <button class="btn full gold open-report">📄 RELATÓRIO DE EVOLUÇÃO</button>
       </div>
       <div class="panel">
-        <div class="panel-title">HISTÓRICO</div>
+        <div class="panel-title">HISTÓRICO DE PESO</div>
         <ul id="weight-history" class="history"></ul>
+      </div>
+      <div class="panel">
+        <div class="panel-title">MEDIDAS CORPORAIS</div>
+        <p class="sys-text small">Meça com fita métrica flexível, de manhã, antes de comer e treinar, sempre no mesmo lado e sem apertar a fita. Preencha só o que quiser: dá para começar com 2 ou 3 medidas. +20 XP por semana.</p>
+        <form id="measure-form" class="form">
+          <label>Data <input type="date" id="measure-date"></label>
+          <div id="measure-inputs" class="measure-grid"></div>
+          <button class="btn gold" type="submit">SALVAR MEDIDAS</button>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-title">EVOLUÇÃO DAS MEDIDAS</div>
+        <div id="measure-table"></div>
+        <div id="measure-chart-wrap" hidden>
+          <label class="form-inline">Gráfico de <select id="measure-pick"></select></label>
+          <div id="measure-chart" class="chart-box"></div>
+        </div>
+        <p class="sys-text small">Verde = mudou na direção boa (braços, peito e pernas crescendo; cintura, abdômen e gordura diminuindo).</p>
+        <ul id="measure-history" class="history"></ul>
       </div>
     </section>
 
@@ -219,9 +253,10 @@
           <div class="health-fields" data-prefix="cfg"></div>
           <label>Dificuldade
             <select id="cfg-diff">
-              <option value="iniciante">Iniciante (metade das repetições)</option>
+              <option value="iniciante">Iniciante (60% das metas)</option>
               <option value="normal">Normal</option>
               <option value="dificil">Difícil (+50%)</option>
+              <option value="extremo">Extremo (2× as metas)</option>
             </select>
           </label>
           <button class="btn" type="submit">SALVAR</button>
@@ -249,7 +284,7 @@
     <button data-view="quests"><span>!</span>Missões</button>
     <button data-view="gym"><span>⚔</span>Treino</button>
     <button data-view="plan"><span>✚</span>Plano</button>
-    <button data-view="weight"><span>⚖</span>Peso</button>
+    <button data-view="weight"><span>⚖</span>Corpo</button>
     <button data-view="settings"><span>⚙</span>Config</button>
   </nav>
 
@@ -269,13 +304,14 @@
         <label>Nome do Jogador <input id="ob-name" required maxlength="24"></label>
         <label>Altura (cm) <input id="ob-height" type="number" min="100" max="250" required></label>
         <label id="ob-weight-wrap">Peso atual (kg) <input id="ob-weight" type="number" step="0.1" min="30" max="400" required></label>
-        <label>Peso meta (kg) <input id="ob-goal" type="number" step="0.1" min="30" max="400" required></label>
+        <label>Peso meta (kg) <span class="hint">pode ser maior que o atual se o objetivo for ganhar peso</span><input id="ob-goal" type="number" step="0.1" min="30" max="400" required></label>
         <div class="health-fields" data-prefix="ob"></div>
         <label>Dificuldade
           <select id="ob-diff">
-            <option value="iniciante">Iniciante (recomendado para começar)</option>
+            <option value="iniciante">Iniciante (60% das metas)</option>
             <option value="normal">Normal</option>
-            <option value="dificil">Difícil</option>
+            <option value="dificil">Difícil (+50%)</option>
+            <option value="extremo">Extremo (2× as metas)</option>
           </select>
         </label>
         <button class="btn" type="submit" id="ob-submit">DESPERTAR</button>
@@ -310,6 +346,7 @@
 
   <script src="health.js"></script>
   <script src="gym.js"></script>
+  <script src="measures.js"></script>
   <script src="report.js"></script>
   <script src="app.js"></script>
 </body>

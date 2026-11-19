@@ -5,7 +5,7 @@ Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, r
 
 ## Como jogar
 
-- **Missão Diária** (reseta à meia-noite): flexões, abdominais, agachamentos, caminhada/corrida,
+- **Missão Diária** (reseta à meia-noite): flexões, abdominais, agachamentos, prancha, burpees, caminhada/corrida,
   hidratação, alimentação limpa e sono. Cada missão concluída dá **+15 XP**; completar todas dá
   um bônus que cresce com a sua sequência de dias.
 - **As metas crescem com o seu nível** — quanto mais forte você fica, mais o Sistema exige
@@ -19,7 +19,23 @@ Um app web no estilo "Sistema" de anime de caçadores: você é o **Jogador**, r
   Cada nível dá 3 pontos para distribuir em FOR, AGI, VIT, PER e INT.
 - **Conquistas e títulos**: 16 conquistas; toque numa desbloqueada para equipar o título.
 
+## Objetivo: perder, ganhar ou manter peso
+
+No cadastro (e em Config) escolha o objetivo. **Ganhar peso** usa superávit de até 500 kcal/dia e
+1,8 g/kg de proteína; **manter** usa o gasto total. XP de recorde de peso, conquistas, barra de
+progresso e relatório seguem a direção escolhida.
+
+## Medidas corporais (aba ⚖ Corpo)
+
+Pescoço, ombros, peito, braços, antebraço, cintura, abdômen, quadril, coxas, panturrilhas e % de
+gordura. Tabela de evolução (verde = direção boa), gráfico por medida e histórico. +20 XP por semana.
+
 ## Academia (aba ⚔ Treino)
+
+- **Meu próprio treino**: cole o treino em texto (um exercício por linha, ex.: `Supino reto 4x10`,
+  com uma linha de título por treino, ex.: `Treino A - Peito`). O app mostra a prévia antes de salvar.
+- **Progressão de força**: gráfico por exercício, primeira/melhor carga, evolução em % e 1RM
+  estimado (Epley), com **registro rápido** de cargas fora do check-in.
 
 - Escolha os **dias da semana** e sua **experiência**. O app gera a divisão automaticamente:
   2× corpo inteiro A/B · 3× corpo inteiro A/B/C (iniciante) ou Empurrar/Puxar/Pernas ·

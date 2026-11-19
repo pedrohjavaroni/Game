@@ -91,13 +91,16 @@ function collectReport(period) {
   const perfect = Object.keys(g.perfectWeeks || {}).filter((k) => inRange(k, r)).length;
 
   // evolução de cargas: primeira carga no período × maior carga no período
+  // (inclui as cargas do treino do dia e do registro rápido)
   const loads = {};
-  sess.forEach(([k, s]) => Object.entries(s.log || {}).forEach(([id, l]) => {
-    if (!(l.kg > 0) || !EXERCISES[id]) return;
-    if (!loads[id]) loads[id] = { first: l.kg, firstDate: k, max: l.kg, count: 0 };
-    loads[id].max = Math.max(loads[id].max, l.kg);
-    loads[id].count += 1;
-  }));
+  if (state.gym) {
+    liftIds().forEach((id) => {
+      const hs = liftHistory(id).filter((x) => inRange(x.date, r));
+      if (!hs.length) return;
+      loads[id] = { first: hs[0].kg, firstDate: hs[0].date, max: Math.max(...hs.map((x) => x.kg)), count: hs.length };
+    });
+  }
+  const measures = measureSummary(r);
 
   // médias semanais de peso
   const weeks = {};
@@ -109,14 +112,22 @@ function collectReport(period) {
   return {
     r, nDays, p, series, wIn, wStart, wEnd,
     delta: wEnd - wStart,
-    totalLost: p.startWeight - wEnd,
-    goalProgress: clamp((p.startWeight - wEnd) / Math.max(0.1, p.startWeight - p.goalWeight), 0, 1),
+    goalType: goalTypeOf(p),
+    moved: goalTypeOf(p) === 'ganhar' ? wEnd - p.startWeight : p.startWeight - wEnd,
+    goalProgress: p.startWeight === p.goalWeight ? 1 : clamp((p.startWeight - wEnd) / (p.startWeight - p.goalWeight), 0, 1),
     bmiStart: wStart / (hM * hM), bmiEnd: wEnd / (hM * hM),
-    weeklyRate: nDays >= 7 ? ((wStart - wEnd) / nDays) * 7 : null,
+    weeklyRate: nDays >= 7 ? ((wEnd - wStart) / nDays) * 7 : null,
     completed, best,
-    sess, expected, finished: finishedS.length, avgMin, perfect, loads,
+    sess, expected, finished: finishedS.length, avgMin, perfect, loads, measures,
     weekly, ach, plan: getPlan(),
   };
+}
+
+// verde quando a variação vai na direção do objetivo
+function dirClass(diff, goalType) {
+  if (!diff || Math.abs(diff) < 0.05 || goalType === 'manter') return '';
+  const good = goalType === 'ganhar' ? diff > 0 : diff < 0;
+  return good ? 'good' : 'bad';
 }
 
 function weightChartSvg(data) {
@@ -168,10 +179,11 @@ function reportHtml(period) {
   h += `<h2>CORPO</h2><div class="r-grid">`;
   h += card('Peso no início do período', fmtKg(d.wStart));
   h += card('Peso atual', fmtKg(d.wEnd));
-  h += card('Variação no período', signKg(d.wEnd - d.wStart), '', d.delta < 0 ? 'good' : d.delta > 0 ? 'bad' : '');
+  h += card('Objetivo', GOALS[d.goalType].label.split(' (')[0]);
+  h += card('Variação no período', signKg(d.wEnd - d.wStart), '', dirClass(d.delta, d.goalType));
   h += card('IMC', `${fmtDec(d.bmiStart)} → ${fmtDec(d.bmiEnd)}`, bmiCategory(d.bmiEnd).label);
-  h += card('Ritmo médio', d.weeklyRate != null ? `${fmtDec(d.weeklyRate, 2)} kg/sem` : '—', 'perda por semana');
-  h += card('Meta', fmtKg(p.goalWeight), `${Math.round(d.goalProgress * 100)}% do caminho · total perdido ${fmtKg(Math.max(0, d.totalLost))}`);
+  h += card('Ritmo médio', d.weeklyRate != null ? `${d.weeklyRate > 0 ? '+' : d.weeklyRate < 0 ? '−' : ''}${fmtDec(Math.abs(d.weeklyRate), 2)} kg/sem` : '—', 'variação por semana', d.weeklyRate != null ? dirClass(d.weeklyRate, d.goalType) : '');
+  h += card('Meta', fmtKg(p.goalWeight), d.goalType === 'manter' ? `a ${fmtKg(Math.abs(d.wEnd - p.goalWeight))} da meta` : `${Math.round(d.goalProgress * 100)}% do caminho · total ${d.goalType === 'ganhar' ? 'ganho' : 'perdido'} ${fmtKg(Math.max(0, d.moved))}`);
   if (p.waist) h += card('Cintura (último registro)', `${fmtDec(p.waist, 0)} cm`, waistRisk(p.sex, p.waist).label);
   h += `</div><div class="r-bar" style="margin-top:10px"><i style="width:${d.goalProgress * 100}%"></i></div>`;
   h += `<h2>GRÁFICO DE PESO</h2>${weightChartSvg(d)}`;
@@ -181,7 +193,7 @@ function reportHtml(period) {
     d.weekly.forEach((w, i) => {
       const prev = d.weekly[i - 1];
       const diff = prev ? w.avg - prev.avg : null;
-      h += `<tr><td>${fmtDate(w.ws)}</td><td class="num">${w.n}</td><td class="num">${fmtKg(w.avg)}</td><td class="num ${diff == null ? '' : diff < 0 ? 'good' : diff > 0 ? 'bad' : ''}">${diff == null ? '—' : signKg(diff)}</td></tr>`;
+      h += `<tr><td>${fmtDate(w.ws)}</td><td class="num">${w.n}</td><td class="num">${fmtKg(w.avg)}</td><td class="num ${diff == null ? '' : dirClass(diff, d.goalType)}">${diff == null ? '—' : signKg(diff)}</td></tr>`;
     });
     h += `</table>`;
   }
@@ -211,7 +223,7 @@ function reportHtml(period) {
         const l = d.loads[id];
         const gain = l.max - l.first;
         const pct = l.first > 0 ? Math.round((gain / l.first) * 100) : 0;
-        h += `<tr><td>${esc(EXERCISES[id].n)}</td><td class="num">${fmtNum(l.first, true)} kg</td><td class="num">${fmtNum(l.max, true)} kg</td><td class="num ${gain > 0 ? 'good' : ''}">${gain > 0 ? `+${fmtNum(gain, true)} kg (${pct}%)` : '—'}</td></tr>`;
+        h += `<tr><td>${esc(exName(id))}</td><td class="num">${fmtNum(l.first, true)} kg</td><td class="num">${fmtNum(l.max, true)} kg</td><td class="num ${gain > 0 ? 'good' : ''}">${gain > 0 ? `+${fmtNum(gain, true)} kg (${pct}%)` : '—'}</td></tr>`;
       });
       h += `</table>`;
     }
@@ -219,13 +231,21 @@ function reportHtml(period) {
       const workouts = buildWorkouts();
       h += `<h2>TREINOS REALIZADOS</h2><table><tr><th>Data</th><th>Treino</th><th class="num">Séries</th><th class="num">Duração</th></tr>`;
       d.sess.slice().reverse().slice(0, 40).forEach(([k, s]) => {
-        const w = workouts[s.workout] || workouts[0];
-        const total = w.ex.reduce((a, e) => a + e.sets, 0);
-        const done = w.ex.reduce((a, e) => a + ((s.log[e.id] && s.log[e.id].sets.filter(Boolean).length) || 0), 0);
-        h += `<tr><td>${fmtDate(k)}</td><td>${w.letter} — ${esc(w.name)}</td><td class="num">${done}/${total}</td><td class="num">${s.finished ? `${Math.round((s.finished - s.checkIn) / 60000)} min` : '—'}</td></tr>`;
+        const { done, total, letter, name } = sessionSets(s, workouts);
+        h += `<tr><td>${fmtDate(k)}</td><td>${letter} — ${esc(name)}</td><td class="num">${done}/${total}</td><td class="num">${s.finished ? `${Math.round((s.finished - s.checkIn) / 60000)} min` : '—'}</td></tr>`;
       });
       h += `</table>`;
     }
+  }
+
+  // Medidas
+  if (d.measures.length) {
+    h += `<h2>MEDIDAS CORPORAIS</h2><table><tr><th>Medida</th><th class="num">Início</th><th class="num">Atual</th><th class="num">Variação</th></tr>`;
+    d.measures.forEach(({ m, first, last, diff, n }) => {
+      const dt = n > 1 ? `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${fmtDec(Math.abs(diff), 1)} ${mUnit(m)}` : '—';
+      h += `<tr><td>${esc(m.n)}</td><td class="num">${fmtM(m, first.v)}</td><td class="num">${fmtM(m, last.v)}</td><td class="num ${measureClass(m, diff)}">${dt}</td></tr>`;
+    });
+    h += `</table><p class="r-sub">Início = primeira medida até o começo do período; atual = última registrada.</p>`;
   }
 
   // Conquistas
@@ -288,7 +308,8 @@ function downloadCsv() {
   const r = periodRange(reportPeriod);
   const workouts = state.gym && state.gym.setup ? buildWorkouts() : [];
   const wByDate = Object.fromEntries(weightSeries().map((w) => [w.date, w.kg]));
-  const rows = [['data', 'peso_kg', 'missao_diaria_completa', 'missoes_feitas', 'missoes_total', 'academia_presenca', 'treino', 'series_feitas', 'duracao_min']];
+  const mByDate = Object.fromEntries((state.measures || []).map((e) => [e.date, e.v]));
+  const rows = [['data', 'peso_kg', 'missao_diaria_completa', 'missoes_feitas', 'missoes_total', 'academia_presenca', 'treino', 'series_feitas', 'duracao_min', ...MEASURES.map((m) => `${m.id}_${mUnit(m) === '%' ? 'pct' : 'cm'}`)]];
   for (let k = r.start; k <= r.end; k = addDays(k, 1)) {
     const d = state.days[k];
     const aq = d ? activeQuests(d) : [];
@@ -296,12 +317,13 @@ function downloadCsv() {
     const s = state.gym && state.gym.sessions[k];
     let treino = '', series = '', dur = '';
     if (s && s.checkIn && workouts.length) {
-      const w = workouts[s.workout] || workouts[0];
-      treino = `${w.letter} - ${w.name}`;
-      series = w.ex.reduce((a, e) => a + ((s.log[e.id] && s.log[e.id].sets.filter(Boolean).length) || 0), 0);
+      const ss = sessionSets(s, workouts);
+      treino = `${ss.letter} - ${ss.name}`;
+      series = ss.done;
       dur = s.finished ? Math.round((s.finished - s.checkIn) / 60000) : '';
     }
-    rows.push([k, wByDate[k] != null ? String(wByDate[k]).replace('.', ',') : '', d ? (d.completed ? 'sim' : 'nao') : '', done, d ? aq.length : '', s && s.checkIn ? 'sim' : 'nao', treino, series, dur]);
+    rows.push([k, wByDate[k] != null ? String(wByDate[k]).replace('.', ',') : '', d ? (d.completed ? 'sim' : 'nao') : '', done, d ? aq.length : '', s && s.checkIn ? 'sim' : 'nao', treino, series, dur,
+      ...MEASURES.map((m) => (mByDate[k] && mByDate[k][m.id] != null ? String(mByDate[k][m.id]).replace('.', ',') : ''))]);
   }
   // ; como separador abre direto no Excel/Sheets em português
   const csv = '﻿' + rows.map((r2) => r2.map(csvCell).join(';')).join('\n');

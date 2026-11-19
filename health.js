@@ -29,7 +29,16 @@ const PACE = {
   acelerado: { kg: 0.75, label: 'Acelerado — ~0,75 kg por semana' },
 };
 
+const GOALS = {
+  perder: { label: 'Perder peso (emagrecer)' },
+  ganhar: { label: 'Ganhar peso (massa muscular)' },
+  manter: { label: 'Manter o peso (recomposição corporal)' },
+};
+
 const KCAL_PER_KG = 7700;
+const MAX_SURPLUS = 500; // superávit máximo p/ ganhar massa com pouca gordura
+
+const goalTypeOf = (p) => (p && p.goalType) || 'perder';
 
 function bmiCategory(bmi) {
   if (bmi < 18.5) return { label: 'Abaixo do peso', level: 1 };
@@ -66,21 +75,29 @@ function computePlan(p, weight) {
 
   const minor = p.age < 18;
   const pregnant = p.pregnancy === 'gestante' || p.pregnancy === 'lactante';
-  const restricted = minor || pregnant || bmi < 18.5;
+  const goalType = goalTypeOf(p);
+  const losing = goalType === 'perder';
+  const gaining = goalType === 'ganhar';
+  // sem déficit para menores, gestantes/lactantes e IMC baixo; menores e gestantes também sem superávit planejado
+  const restricted = minor || pregnant || (losing && bmi < 18.5);
   const floorKcal = p.sex === 'M' ? 1500 : 1200;
 
   const wanted = (PACE[p.pace] || PACE.recomendado).kg * KCAL_PER_KG / 7;
   const capped = Math.min(wanted, tdee * 0.25); // déficit máximo de 25% do gasto
-  let kcal = restricted ? tdee : Math.max(floorKcal, tdee - capped);
+  const surplusWanted = Math.min(wanted, MAX_SURPLUS);
+  let kcal = tdee;
+  if (!restricted && losing) kcal = Math.max(floorKcal, tdee - capped);
+  if (!restricted && gaining) kcal = tdee + surplusWanted;
   kcal = round10(kcal);
   if (p.pregnancy === 'gestante') kcal = round10(tdee + 300);
   if (p.pregnancy === 'lactante') kcal = round10(tdee + 400);
   const deficit = Math.max(0, Math.round(tdee - kcal));
-  const pacePerWeek = (deficit * 7) / KCAL_PER_KG;
+  const surplus = pregnant ? 0 : Math.max(0, Math.round(kcal - tdee));
+  const pacePerWeek = ((losing ? deficit : gaining ? surplus : 0) * 7) / KCAL_PER_KG;
 
   // proteína pelo peso de referência (peso no IMC 25 quando acima disso)
   const refWeight = bmi > 25 ? 25 * hM * hM : weight;
-  const protein = Math.round(refWeight * (restricted ? 1.2 : 1.6));
+  const protein = Math.round(refWeight * (restricted ? 1.2 : gaining ? 1.8 : 1.6));
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const fiber = Math.max(25, Math.round((kcal / 1000) * 14));
@@ -95,7 +112,7 @@ function computePlan(p, weight) {
   if (p.age < 18) sleep = '8 a 10 horas';
   else if (p.age >= 65) sleep = '7 a 8 horas';
 
-  const toGoal = Math.max(0, weight - p.goalWeight);
+  const toGoal = losing ? Math.max(0, weight - p.goalWeight) : gaining ? Math.max(0, p.goalWeight - weight) : 0;
   const weeks = pacePerWeek > 0 ? toGoal / pacePerWeek : null;
   let goalDate = null;
   if (weeks != null && toGoal > 0) {
@@ -111,16 +128,18 @@ function computePlan(p, weight) {
   const warnings = [];
   if (minor) warnings.push('Menores de 18 anos não devem fazer dieta com déficit calórico sem acompanhamento de pediatra ou nutricionista. O plano usa calorias de manutenção e foca em hábitos.');
   if (pregnant) warnings.push('Na gestação e na amamentação não se recomenda déficit calórico. O plano usa calorias de manutenção com acréscimo, e qualquer exercício deve ser liberado pelo seu obstetra.');
-  if (bmi < 18.5) warnings.push('Seu IMC está abaixo da faixa saudável. O Sistema não vai sugerir déficit calórico. Procure um profissional de saúde.');
+  if (bmi < 18.5 && !gaining) warnings.push('Seu IMC está abaixo da faixa saudável. O Sistema não vai sugerir déficit calórico. Procure um profissional de saúde.');
   if (p.conditions) warnings.push('Você informou uma condição de saúde. Metas de calorias, água e proteína podem precisar de ajuste (doenças renais ou cardíacas, por exemplo, podem exigir restringir líquidos ou proteína). Confirme estes números com seu médico antes de seguir.');
   if (bmi >= 35) warnings.push('Com IMC acima de 35, prefira exercícios de baixo impacto (caminhada, bicicleta, hidroginástica) e comece no modo Iniciante. Acompanhamento médico é especialmente recomendado.');
-  if (!restricted && tdee - capped < floorKcal) warnings.push(`Seu déficit foi limitado ao mínimo seguro de ${floorKcal} kcal/dia, então o ritmo será mais lento que o escolhido. Não coma menos que isso sem acompanhamento.`);
-  if (p.goalWeight < healthyMin) warnings.push(`Sua meta está abaixo da faixa saudável para sua altura (mínimo ~${healthyMin.toFixed(1)} kg). Considere revisar.`);
+  if (gaining && bmi >= 30) warnings.push('Seu IMC já está acima de 30. Ganhar peso aumenta riscos à saúde; converse com seu médico. Uma alternativa é escolher "Manter o peso" e focar em ganhar músculo e perder gordura ao mesmo tempo.');
+  if (gaining && !restricted && wanted > MAX_SURPLUS) warnings.push(`O superávit foi limitado a ${MAX_SURPLUS} kcal/dia. Acima disso, a maior parte do peso ganho tende a ser gordura, não músculo.`);
+  if (losing && !restricted && tdee - capped < floorKcal) warnings.push(`Seu déficit foi limitado ao mínimo seguro de ${floorKcal} kcal/dia, então o ritmo será mais lento que o escolhido. Não coma menos que isso sem acompanhamento.`);
+  if (losing && p.goalWeight < healthyMin) warnings.push(`Sua meta está abaixo da faixa saudável para sua altura (mínimo ~${healthyMin.toFixed(1)} kg). Considere revisar.`);
 
   return {
     bmi, cat, healthyMin, healthyMax,
     bmr: Math.round(bmr), tdee: Math.round(tdee), activityLabel: act.label,
-    kcal, deficit, pacePerWeek, restricted, floorKcal,
+    kcal, deficit, surplus, pacePerWeek, restricted, floorKcal, goalType,
     protein, fat, carbs, fiber,
     waterMl, waterCups, sleep,
     toGoal, weeks, goalDate,
