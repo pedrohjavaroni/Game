@@ -1,5 +1,5 @@
-const CACHE = 'fitgame-v8';
-const ASSETS = ['./', './index.html', './style.css', './health.js', './gym.js', './measures.js', './report.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png'];
+const CACHE = 'fitgame-v9';
+const ASSETS = ['./', './index.html', './style.css', './health.js', './gym.js', './avatar.js', './measures.js', './report.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

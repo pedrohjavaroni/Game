@@ -342,3 +342,94 @@ textarea:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 8px v
 .m-table .good { color: var(--ok); } .m-table .bad { color: var(--danger); }
 .form-inline { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 14px; }
 .form-inline select { flex: 1; }
+
+/* =========================================================
+   Personagem e animações estilo anime
+   ========================================================= */
+
+/* partículas de mana no fundo */
+#mana { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+#mana span { position: absolute; bottom: -10px; border-radius: 50%; background: var(--glow); box-shadow: 0 0 8px var(--glow); opacity: 0; animation: mana-rise linear infinite; }
+@keyframes mana-rise { 0% { transform: translateY(0) translateX(0); opacity: 0; } 10% { opacity: .55; } 80% { opacity: .3; } 100% { transform: translateY(-105vh) translateX(30px); opacity: 0; } }
+
+/* painel do herói */
+.hero { --rank: var(--glow); text-align: center; overflow: hidden; padding-top: 10px; }
+.hero-rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rank) 14%, transparent) 0deg 4deg, transparent 4deg 18deg); animation: spin 40s linear infinite; mask-image: radial-gradient(circle, #000 15%, transparent 55%); -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 55%); pointer-events: none; }
+.hero-art { position: relative; width: 220px; max-width: 70%; margin: 0 auto; }
+.hero-rank { position: relative; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: 6px; color: #fff; text-shadow: 0 0 10px var(--rank), 0 0 24px var(--rank); margin-top: -6px; }
+.hero-form { position: relative; color: var(--rank); font-weight: 700; letter-spacing: 1px; }
+.hero-bar { position: relative; height: 6px; background: rgba(255,255,255,.07); margin: 10px auto 4px; max-width: 280px; overflow: hidden; border-radius: 3px; }
+.hero-bar i { display: block; height: 100%; background: var(--rank); box-shadow: 0 0 10px var(--rank); transition: width .8s ease; }
+.hero-next { position: relative; font-size: 13px; color: var(--muted); }
+
+/* desenho do personagem */
+.avatar { width: 100%; height: auto; display: block; overflow: visible; }
+.av-anim .av-body { animation: av-float 3.2s ease-in-out infinite; transform-origin: 100px 240px; }
+.av-anim .av-aura { animation: av-glow 1.6s ease-in-out infinite; }
+.av-anim .av-aura2 { animation: av-flicker 1.1s ease-in-out infinite reverse; transform-origin: 100px 245px; }
+.av-anim .av-scarf { animation: av-flutter 1.4s ease-in-out infinite; transform-origin: 110px 90px; }
+.av-anim .av-coat { animation: av-sway 2.6s ease-in-out infinite; transform-origin: 100px 90px; }
+.av-anim .av-eyes { animation: av-blink 4.5s infinite; transform-origin: 100px 63px; }
+.av-anim .av-circle-dash { animation: av-dash 3s linear infinite; }
+.av-anim .av-halo { animation: av-float 2.4s ease-in-out infinite; }
+.av-anim .av-wisps path { stroke-dasharray: 40 18; animation: av-dash 2.2s linear infinite; }
+.av-anim .av-spark { animation: av-spark 2.4s ease-out infinite; opacity: 0; }
+@keyframes av-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes av-glow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+@keyframes av-flicker { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 1.08); } }
+@keyframes av-flutter { 0%, 100% { transform: rotate(0deg) skewY(0deg); } 50% { transform: rotate(-7deg) skewY(4deg); } }
+@keyframes av-sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(-2deg); } }
+@keyframes av-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes av-dash { to { stroke-dashoffset: -66; } }
+@keyframes av-spark { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-190px); opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* caminho da evolução */
+.evo-path { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.evo-card { --rank: var(--glow); text-align: center; border: 1px solid rgba(76,195,255,.18); padding: 4px 2px 6px; border-radius: 4px; }
+.evo-card b { display: block; font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0; white-space: nowrap; color: var(--rank); }
+.evo-card small { display: block; font-size: 10px; color: var(--muted); line-height: 1.1; min-height: 22px; }
+.evo-card.current { border-color: var(--rank); box-shadow: 0 0 12px color-mix(in srgb, var(--rank) 60%, transparent), inset 0 0 12px color-mix(in srgb, var(--rank) 25%, transparent); }
+.evo-card.locked b { color: #3a4a6c; }
+.evo-art { width: 100%; }
+@media (max-width: 380px) { .evo-path { grid-template-columns: repeat(3, 1fr); } }
+
+/* missão concluída: estouro */
+.quest.pop { animation: q-pop .6s ease; position: relative; }
+.quest.pop::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--ok); animation: q-ring .7s ease-out forwards; pointer-events: none; }
+@keyframes q-pop { 0% { transform: scale(1); } 30% { transform: scale(1.03); background: rgba(62,240,168,.12); } 100% { transform: scale(1); } }
+@keyframes q-ring { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.08, 1.4); } }
+
+/* cena de level up / rank up / missão completa */
+.scene { --rank: var(--glow); position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rank) 22%, #02040c) 0%, #02040c 70%); overflow: hidden; animation: scene-in .25s ease; cursor: pointer; }
+.scene.out { animation: scene-out .35s ease forwards; }
+.scene-lines { position: absolute; inset: -50%; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.0) 0deg 2.5deg, color-mix(in srgb, var(--rank) 55%, transparent) 2.5deg 3deg, rgba(255,255,255,0) 3deg 7deg); mask-image: radial-gradient(circle, transparent 18%, #000 60%); -webkit-mask-image: radial-gradient(circle, transparent 18%, #000 60%); animation: speed 0.5s steps(3) infinite, spin 12s linear infinite; opacity: .8; }
+@keyframes speed { 0% { filter: brightness(1); } 50% { filter: brightness(1.6); } 100% { filter: brightness(1); } }
+.scene-flash { position: absolute; inset: 0; background: #fff; animation: flash .55s ease-out forwards; pointer-events: none; }
+@keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+.scene-content { position: relative; text-align: center; padding: 16px; }
+.scene-art { width: 230px; margin: 0 auto -10px; animation: art-in .7s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes art-in { 0% { transform: scale(.3) translateY(60px); opacity: 0; filter: brightness(4); } 60% { filter: brightness(1.6); } 100% { transform: none; opacity: 1; filter: none; } }
+.scene-title { position: relative; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 40px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 12px var(--rank), 0 0 30px var(--rank); animation: title-in .5s .25s cubic-bezier(.2, 1.8, .4, 1) both; }
+.scene-title::before, .scene-title::after { content: attr(data-text); position: absolute; inset: 0; opacity: .7; }
+.scene-title::before { color: #ff2a6d; transform: translate(-3px, 0); clip-path: inset(0 0 55% 0); animation: glitch 1.2s infinite steps(2); }
+.scene-title::after { color: #05d9e8; transform: translate(3px, 0); clip-path: inset(55% 0 0 0); animation: glitch 1.2s infinite steps(2) reverse; }
+@keyframes glitch { 0% { transform: translate(-3px, 0); } 25% { transform: translate(3px, -1px); } 50% { transform: translate(-2px, 1px); } 75% { transform: translate(2px, 0); } 100% { transform: translate(0, 0); } }
+@keyframes title-in { 0% { transform: scale(2.6); opacity: 0; letter-spacing: 30px; } 100% { transform: none; opacity: 1; } }
+.scene-sub { font-size: 22px; margin-top: 6px; color: #fff; animation: up-in .4s .55s ease both; }
+.scene-sub b { color: var(--rank); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 8px var(--rank); }
+.scene-extra { margin-top: 6px; color: var(--gold); font-weight: 700; letter-spacing: 1px; animation: up-in .4s .75s ease both; }
+.scene-tap { margin-top: 22px; font-size: 12px; color: var(--muted); letter-spacing: 2px; animation: up-in .4s 1.2s ease both, pulse 1.4s 1.6s infinite; }
+@keyframes up-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pulse { 50% { opacity: .35; } }
+@keyframes scene-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scene-out { to { opacity: 0; transform: scale(1.06); } }
+.scene-rankup .scene-title { font-size: 54px; }
+.scene-rankup .scene-art { width: 260px; }
+.scene-daily .scene-title { font-size: 30px; }
+
+/* acessibilidade: menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .avatar *, .hero-rays, #mana span, .scene *, .quest.pop, .quest.pop::after { animation: none !important; }
+  .scene-flash { display: none; }
+}

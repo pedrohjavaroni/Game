@@ -225,17 +225,20 @@ function gainXp(amount, reason) {
   state.totalXp += amt;
   if (reason) toast('SISTEMA', `${reason} <b>+${amt} XP</b>${state.penalty ? ' <small>(penalidade: ½)</small>' : ''}`);
   let leveled = false;
+  const fromLevel = state.level;
+  const fromRank = rankFor(state.level);
   while (state.xp >= xpToNext(state.level)) {
     state.xp -= xpToNext(state.level);
-    const oldRank = rankFor(state.level);
     state.level += 1;
     state.statPoints += POINTS_PER_LEVEL;
     leveled = true;
-    const newRank = rankFor(state.level);
-    toast('LEVEL UP!', `Você alcançou o <b>nível ${state.level}</b>. +${POINTS_PER_LEVEL} pontos de atributo.`, 'levelup');
-    if (newRank !== oldRank) toast('RECLASSIFICAÇÃO', `Seu rank subiu para <b>${newRank}</b>. Nova classe: <b>${classFor(state.level)}</b>.`, 'levelup');
   }
-  if (leveled) checkAchievements();
+  if (leveled) {
+    // cenas animadas no lugar das notificações simples
+    playScene('levelup', { from: fromLevel, to: state.level, points: POINTS_PER_LEVEL * (state.level - fromLevel) });
+    if (rankFor(state.level) !== fromRank) playScene('rankup', {});
+    checkAchievements();
+  }
 }
 
 /* Avalia dias que passaram desde a última abertura */
@@ -262,6 +265,8 @@ function rollover() {
   save();
 }
 
+let justDone = null; // missão recém-concluída (para a animação)
+
 function updateQuest(id, delta) {
   const q = QUESTS.find((x) => x.id === id);
   const d = today();
@@ -273,6 +278,7 @@ function updateQuest(id, delta) {
 
   if (v >= target && !d.rewarded[id]) {
     d.rewarded[id] = true;
+    justDone = id;
     gainXp(XP_PER_QUEST, `Missão "${q.name}" concluída.`);
   }
 
@@ -283,6 +289,7 @@ function updateQuest(id, delta) {
     state.bestStreak = Math.max(state.bestStreak, state.streak);
     state.dailiesDone += 1;
     const bonus = XP_DAILY_BONUS + 5 * Math.min(state.streak, 20);
+    playScene('daily', { streak: state.streak, xp: state.penalty ? Math.ceil(bonus / 2) : bonus });
     gainXp(bonus, `MISSÃO DIÁRIA COMPLETA! Sequência: ${state.streak} dia(s).`);
     checkAchievements();
   }
@@ -445,6 +452,8 @@ function render() {
 }
 
 function renderStatus() {
+  renderHero();
+  setTimeout(() => { justDone = null; }, 0);
   const p = state.profile;
   const rank = rankFor(state.level);
   const badge = $('#rank-badge');
@@ -502,7 +511,7 @@ function renderQuests() {
     const target = d.targets[q.id];
     const v = d.progress[q.id] || 0;
     const done = v >= target;
-    const row = el('div', `quest${done ? ' done' : ''}`);
+    const row = el('div', `quest${done ? ' done' : ''}${justDone === q.id ? ' pop' : ''}`);
     const info = el('div', 'q-info');
     const name = el('div', 'q-name', q.name);
     if (done) name.append(el('span', 'q-check', ' ✔'));
@@ -693,6 +702,7 @@ function fillSettings() {
   $('#cfg-goal').value = p.goalWeight;
   $('#cfg-diff').value = p.difficulty;
   fillHealthFields('cfg', p);
+  $('#cfg-avatar').value = avatarStyle();
 }
 
 /* ---------------- relógio de reset ---------------- */
@@ -788,6 +798,7 @@ $('#settings-form').addEventListener('submit', (e) => {
   p.goalWeight = newGoal;
   p.difficulty = $('#cfg-diff').value;
   Object.assign(p, readHealthFields('cfg'));
+  p.avatar = $('#cfg-avatar').value;
   // recalcula metas de hoje sem perder o progresso já feito
   const d = today();
   const plan = getPlan();
@@ -1054,6 +1065,7 @@ function renderPlan() {
 
 buildHealthFields();
 initGymEvents();
+initParticles();
 initMeasures();
 initReport();
 $('#open-achievements').onclick = () => showView('achievements');
