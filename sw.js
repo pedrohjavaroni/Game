@@ -1,4 +1,4 @@
-const CACHE = 'fitgame-v9';
+const CACHE = 'fitgame-v10';
 const ASSETS = ['./', './index.html', './style.css', './health.js', './gym.js', './avatar.js', './measures.js', './report.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png'];
 
 self.addEventListener('install', (e) => {
