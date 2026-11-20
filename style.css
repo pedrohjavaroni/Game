@@ -435,3 +435,36 @@ textarea:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 8px v
   .avatar *, .hero-rays, #mana span, .scene *, .quest.pop, .quest.pop::after { animation: none !important; }
   .scene-flash { display: none; }
 }
+
+/* ---------- arte ilustrada dos personagens ---------- */
+.avatar-img { --rank: var(--glow); position: relative; height: 100%; display: flex; justify-content: center; align-items: flex-end; }
+.avatar-img img { position: relative; z-index: 1; height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: bottom; user-select: none; -webkit-user-select: none; filter: drop-shadow(0 0 8px color-mix(in srgb, var(--glow) 70%, transparent)); }
+.avatar-img.tier-0 img { filter: drop-shadow(0 0 4px rgba(150, 170, 200, .25)); }
+.avatar-img.tier-5 img { filter: drop-shadow(0 0 14px var(--glow)) drop-shadow(0 0 4px var(--rank)); }
+.av-glow { position: absolute; left: 6%; right: 6%; top: 8%; bottom: 0; border-radius: 50%; background: radial-gradient(ellipse at 50% 58%, var(--rank) 0%, color-mix(in srgb, var(--glow) 60%, transparent) 35%, transparent 68%); filter: blur(16px); opacity: .45; }
+.avatar-img.tier-0 .av-glow { opacity: .1; }
+.avatar-img.tier-1 .av-glow { opacity: .28; }
+.avatar-img.tier-2 .av-glow { opacity: .36; }
+.avatar-img.tier-4 .av-glow, .avatar-img.tier-5 .av-glow { opacity: .6; }
+.avatar-img::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: -2%; height: 7%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--rank) 45%, transparent), transparent 70%); }
+.av-anim img { animation: art-float 3.6s ease-in-out infinite; }
+.av-anim .av-glow { animation: art-pulse 2.4s ease-in-out infinite; }
+@keyframes art-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes art-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.av-sparks { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.av-sparks i { position: absolute; bottom: 6%; width: 4px; height: 4px; border-radius: 50%; background: var(--rank); box-shadow: 0 0 6px var(--rank), 0 0 12px var(--glow); opacity: 0; animation: art-spark 2.6s ease-out infinite; }
+@keyframes art-spark { 0% { transform: translateY(0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-260px) scale(.4); opacity: 0; } }
+.avatar-img.locked img { filter: brightness(0) drop-shadow(0 0 1px rgba(110, 140, 190, .7)); opacity: .7; }
+.avatar-img.locked .av-glow, .avatar-img.locked::after { display: none; }
+.av-lock { position: absolute; z-index: 2; top: 38%; left: 50%; transform: translateX(-50%); font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 20px; color: #3a4a6c; }
+
+.hero-art { height: 340px; width: 100%; max-width: none; }
+.hero-rank { margin-top: 8px; }
+.evo-art { height: 104px; }
+.evo-card { overflow: hidden; }
+.scene-art { width: auto; height: min(50vh, 400px); }
+.scene-rankup .scene-art { width: auto; height: min(56vh, 460px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .av-anim img, .av-anim .av-glow, .av-sparks i { animation: none !important; }
+}

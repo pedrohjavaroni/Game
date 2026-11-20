@@ -1066,6 +1066,7 @@ function renderPlan() {
 buildHealthFields();
 initGymEvents();
 initParticles();
+preloadArt();
 initMeasures();
 initReport();
 $('#open-achievements').onclick = () => showView('achievements');

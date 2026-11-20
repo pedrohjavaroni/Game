@@ -1,5 +1,5 @@
-const CACHE = 'fitgame-v10';
-const ASSETS = ['./', './index.html', './style.css', './health.js', './gym.js', './avatar.js', './measures.js', './report.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png'];
+const CACHE = 'fitgame-v11';
+const ASSETS = ['./', './index.html', './style.css', './health.js', './gym.js', './avatar.js', './measures.js', './report.js', './app.js', './manifest.json', './fitgame-icon.svg', './fitgame-192.png', './fitgame-512.png', './fitgame-180.png', './fitgame-maskable.png', './img/cacador-e.webp', './img/cacador-d.webp', './img/cacador-c.webp', './img/cacador-b.webp', './img/cacador-a.webp', './img/cacador-s.webp', './img/cacadora-e.webp', './img/cacadora-d.webp', './img/cacadora-c.webp', './img/cacadora-b.webp', './img/cacadora-a.webp', './img/cacadora-s.webp'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
